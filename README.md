@@ -6,7 +6,7 @@ repo holds two things:
 
 - **`pyfsda`** (`packages/pyfsda/`) — an **installable Python package**: `import pyfsda` and call any
   FSDA routine as `pyfsda.Score(y, X, ...)`. It has its own build, tests, examples, and CI, and is
-  published to TestPyPI (real PyPI to follow). **Start here if you just want to use FSDA from Python.**
+  published to PyPI. **Start here if you just want to use FSDA from Python.**
 - **The research prototype** (`code/`, `specs/`) it was distilled from — a spec-driven study of the
   Python↔MATLAB bridge, including thin **Julia** (PythonCall) and **R** (reticulate) surfaces over the
   same engine. This is **no build / no CI** by design (see §1–10 below for the internals). Work here is
@@ -21,13 +21,12 @@ repo holds two things:
 release** (e.g. `pip install "matlabengine==26.1.*"` for R2026a; a different MATLAB needs its paired
 version). Python 3.9–3.13.
 
-**Install** (currently on TestPyPI; deps aren't mirrored there, so `--no-deps`):
+**Install**:
 
 ```bash
-pip install -i https://test.pypi.org/simple/ pyfsda==0.4.0 --no-deps
-# with the optional pandas view (real deps come from PyPI):
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple "pyfsda[pandas]==0.4.0"
-# once it's on real PyPI:  pip install pyfsda        # or  pip install "pyfsda[pandas]"
+pip install pyfsda
+# with the optional pandas view:
+pip install pyfsda[pandas]
 ```
 
 **Call any FSDA routine as a Python function** — the MATLAB session starts on first use and is reused:
