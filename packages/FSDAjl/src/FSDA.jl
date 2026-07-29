@@ -11,9 +11,13 @@ function __init__()
     if conda_backend != "Null"
         @warn """
         JULIA_CONDAPKG_BACKEND is set to '$(conda_backend)' (expected 'Null').
-        PythonCall might silently try to provision its own Python via Conda, 
+        PythonCall has likely already provisioned its own Python via Conda, 
         which will NOT include the matlabengine.
-        Please set `export JULIA_CONDAPKG_BACKEND=Null` before starting Julia.
+        
+        To prevent this on your next run, set the environment variable before starting Julia:
+        - Mac/Linux:        export JULIA_CONDAPKG_BACKEND=Null
+        - Windows (CMD):    set JULIA_CONDAPKG_BACKEND=Null
+        - Windows (PS):     \$env:JULIA_CONDAPKG_BACKEND="Null"
         """
     end
 end
