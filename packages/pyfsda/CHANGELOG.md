@@ -7,6 +7,12 @@ All notable changes to `pyfsda` are documented here. The format follows
 ## [0.4.0] — unreleased
 
 ### Added
+- **Python dict → MATLAB struct input marshalling** (spec 020). A `dict` argument (or option value) now
+  crosses as a MATLAB `struct` — recursively: nested `dict` → struct, `list[str]` → cellstr, other lists
+  → cell, numbers/arrays/strings via the usual rules. This makes struct-consuming FSDA routines callable
+  with plain Python objects: an FSDA result `dict` (e.g. from `FSReda`) can be handed straight back into a
+  plot, and option structs like `fground` / `databrush` are ordinary dicts. New example
+  `examples/resfwdplot_brush_example.py` (interactive Forward-Search persistent brushing) uses it.
 - **Optional pandas view at the Python boundary** (`pip install pyfsda[pandas]`, spec 019). pandas stays
   optional and lazily imported — `import pyfsda` works without it, and the neutral
   `dict {VariableNames, RowNames/RowTimes, data, height}` remains the default and the cross-language

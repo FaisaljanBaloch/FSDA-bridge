@@ -84,6 +84,13 @@ decoded MATLAB-side.
 Conventions: a 1-D input crosses as a MATLAB **row** (pass an `(n, 1)` array for a column); outputs
 keep MATLAB's natural shape (no silent reshape); MATLAB indices stay **1-based**.
 
+**Passing structures in** — the boundary also marshals the other way, so a struct-consuming FSDA
+routine can be called with plain Python objects: a `dict` → MATLAB `struct` (recursively), a `list[str]`
+→ cellstr, other `list`s → cell, and numbers/arrays/strings via the usual rules. This makes results
+round-trip: an FSDA result `dict` (e.g. from `FSReda`) can be handed straight back to a plot, and option
+structs like `fground` / `databrush` are just Python dicts — see
+[`examples/resfwdplot_brush_example.py`](examples/resfwdplot_brush_example.py).
+
 Reserved keywords consumed by the bridge are only `nargout`, `echo_output`, `options`, and `frames`;
 every other keyword is forwarded to MATLAB (so FSDA's own `msg` option passes straight through).
 `echo_output=True` tees MATLAB's stdout/stderr to your terminal.
