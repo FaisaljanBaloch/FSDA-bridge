@@ -135,3 +135,34 @@ def test_resfwdplot_dict_struct_pipeline():
         except Exception:
             pass
         eng.stop()
+
+
+@pytest.mark.integration
+def test_grpstatsfs_frames_roundtrip():
+    """table in -> table out: a numeric DataFrame through grpstatsFS and back via frames=True.
+
+    Mirrors examples/grpstatsFS_pandas_example.py: input column names become the output
+    DataFrame's row index, columns are the statistic names, and FSDA's `mean` matches pandas'.
+    """
+    pd = pytest.importorskip("pandas")
+    from pyfsda.frames import is_dataframe
+
+    fsda_root = os.environ.get("PYFSDA_FSDA_ROOT") or None
+    try:
+        eng = FsdaEngine.start(fsda_root=fsda_root, check_version=False)
+    except Exception as exc:                          # no MATLAB / FSDA on this machine
+        pytest.skip(f"MATLAB with FSDA not available: {exc}")
+    try:
+        df = pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0, 5.0],
+                           "b": [10.0, 12.0, 9.0, 11.0, 100.0]})   # 100 = outlier in b
+        stats = eng.call("grpstatsFS", df, [], frames=True)        # DataFrame in and out
+        assert is_dataframe(stats)
+        assert list(stats.index) == ["a", "b"]                     # input columns -> row labels
+        assert "mean" in stats.columns and "median" in stats.columns
+        for col in df.columns:
+            np.testing.assert_allclose(float(stats.loc[col, "mean"]),
+                                       float(df[col].mean()), rtol=0.0, atol=1e-9)
+        # robust median resists the outlier: b's median far below its (inflated) mean
+        assert float(stats.loc["b", "median"]) < float(stats.loc["b", "mean"])
+    finally:
+        eng.stop()

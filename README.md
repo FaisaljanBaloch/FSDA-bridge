@@ -50,7 +50,8 @@ contingency table straight into `corrNominal`. pandas is optional and lazily imp
 return is still the neutral dict, so the shared engine and the R/Julia surfaces are unchanged.
 
 **Learn more:** runnable [`examples/`](packages/pyfsda/examples/) (`score_example_simple.py`,
-`score_example.py`, `corrnominal_pandas_example.py`, `smoke_test.py`), the package
+`score_example.py`, `corrnominal_pandas_example.py`, `grpstatsFS_pandas_example.py`,
+`resfwdplot_brush_example.py`, `smoke_test.py`), the package
 [README](packages/pyfsda/README.md), and [`CONTRIBUTING.md`](packages/pyfsda/CONTRIBUTING.md)
 (dev, self-hosted CI, release flow).
 

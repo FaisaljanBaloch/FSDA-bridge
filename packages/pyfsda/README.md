@@ -111,6 +111,11 @@ remains the cross-language contract):
 Requesting `frames=True` (or passing a DataFrame) without pandas installed raises a clear
 `pip install pyfsda[pandas]` error.
 
+For a full **table in → table out** round trip in one call, see
+[`examples/grpstatsFS_pandas_example.py`](examples/grpstatsFS_pandas_example.py): a numeric DataFrame
+goes into `grpstatsFS` and a labelled DataFrame of per-variable statistics (mean, median, std, MAD,
+skewness, medcouple) comes back via `frames=True`.
+
 On the **first `pyfsda.<name>(...)` call**, pyfsda also prints (once, best-effort) the **latest FSDA
 release available on GitHub**, so you can check your install is current. `FsdaEngine.start()`
 additionally runs a MATLAB-side FSDA up-to-date check via FSDA's `tuna` utility (quiet unless an update
