@@ -39,7 +39,7 @@ import sys
 from .engine import FsdaEngine, from_matlab, to_matlab
 from .frames import is_table_dict, to_dataframe
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     "FsdaEngine", "to_matlab", "from_matlab",
