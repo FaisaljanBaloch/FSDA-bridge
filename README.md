@@ -43,10 +43,12 @@ pyfsda.stop()                                     # optional; also runs at exit
 `pyfsda.<name>` works for **any** FSDA routine (and `from pyfsda import Score` too). Prefer managing the
 session yourself? Use the explicit engine: `from pyfsda import FsdaEngine; eng = FsdaEngine.start(...)`.
 
-**New in 0.4.0 — optional pandas view** (`pip install pyfsda[pandas]`): pass `frames=True` to get
+**New in 0.5.0 — optional pandas view** (`pip install pyfsda[pandas]`): pass `frames=True` to get
 `table`/`timetable` outputs back as a `pandas.DataFrame` (row/column labels preserved as the index and
 columns), and pass a `pandas.DataFrame` argument to send a MATLAB `table` in — e.g. a labeled
-contingency table straight into `corrNominal`. pandas is optional and lazily imported; the default
+contingency table straight into `corrNominal` or a table containing summary statistics into `grpstatsFS`. 
+Output stuctures containing tables are also converted to Pandas' dataframes. Max nesting of tables is 2 
+levels. Pandas is optional and lazily imported; the default
 return is still the neutral dict, so the shared engine and the R/Julia surfaces are unchanged.
 
 **Learn more:** runnable [`examples/`](packages/pyfsda/examples/) (`score_example_simple.py`,
