@@ -166,3 +166,42 @@ def test_grpstatsfs_frames_roundtrip():
         assert float(stats.loc["b", "median"]) < float(stats.loc["b", "mean"])
     finally:
         eng.stop()
+
+
+@pytest.mark.integration
+def test_corrnominal_nested_table_frames():
+    """A table nested in a returned struct honors frames=True (corrNominal's Ntable).
+
+    Guards the fix where matlab.engine natively converts a struct's table field to a
+    DataFrame and from_matlab used to flatten it to a bare ndarray. Default -> neutral
+    table-dict (labels kept); frames=True -> pandas DataFrame with those labels.
+    """
+    pd = pytest.importorskip("pandas")
+    from pyfsda.frames import is_dataframe, is_table_dict
+
+    fsda_root = os.environ.get("PYFSDA_FSDA_ROOT") or None
+    try:
+        eng = FsdaEngine.start(fsda_root=fsda_root, check_version=False)
+    except Exception as exc:                          # no MATLAB / FSDA on this machine
+        pytest.skip(f"MATLAB with FSDA not available: {exc}")
+    try:
+        counts = np.array([[10.0, 20.0, 30.0], [40.0, 50.0, 60.0], [70.0, 80.0, 90.0]])
+        N = pd.DataFrame(counts, index=["r1", "r2", "r3"], columns=["c1", "c2", "c3"])
+
+        # default: the nested table field is the neutral table-dict, labels preserved
+        raw = eng.call("corrNominal", N, dispresults=False)
+        nt = raw["Ntable"]
+        assert is_table_dict(nt)
+        assert list(nt["VariableNames"]) == ["c1", "c2", "c3"]
+        assert list(nt["RowNames"]) == ["r1", "r2", "r3"]
+
+        # frames=True: the nested table field is a DataFrame with those labels + values
+        out = eng.call("corrNominal", N, dispresults=False, frames=True)
+        ntf = out["Ntable"]
+        assert is_dataframe(ntf)
+        assert list(ntf.index) == ["r1", "r2", "r3"]
+        assert list(ntf.columns) == ["c1", "c2", "c3"]
+        np.testing.assert_allclose(ntf.loc[["r1", "r2", "r3"], ["c1", "c2", "c3"]]
+                                   .to_numpy(dtype=float), counts, rtol=0.0, atol=1e-9)
+    finally:
+        eng.stop()

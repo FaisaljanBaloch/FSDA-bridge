@@ -54,7 +54,7 @@ import numpy as np
 import matlab
 import matlab.engine
 
-from .frames import apply_frames, is_dataframe
+from .frames import apply_frames, dataframe_to_table_dict, is_dataframe
 
 # call() reserves these keyword names for its own control; every OTHER keyword is
 # forwarded to MATLAB as a name/value pair. Notably `msg` is NOT reserved -- it
@@ -125,6 +125,9 @@ def from_matlab(x):
     dict        -> {k: from_matlab(v)}                 (struct / nested struct).
     str/bool/int/float -> passed through                (char scalar, logical scalar).
     list/tuple  -> [from_matlab(v) ...]                 (cell array / nargout > 1).
+    DataFrame   -> neutral table-dict                   (a table nested in a struct that
+                  the engine natively converted to pandas; keeps it on the same footing
+                  as a top-level table -- dict here, DataFrame under frames=True).
     matlab.*    -> np.asarray(x)  (numeric/logical array; shape & NaN/Inf preserved,
                   NO reshape).
     """
@@ -138,6 +141,11 @@ def from_matlab(x):
         return x
     if isinstance(x, (list, tuple)):
         return [from_matlab(v) for v in x]
+    if is_dataframe(x):
+        # matlab.engine (with pandas) converts a table nested in a returned struct straight
+        # to a DataFrame; normalise it to the table-dict so labels survive and frames=True
+        # can view it -- otherwise np.asarray below would flatten it to a bare ndarray.
+        return dataframe_to_table_dict(x)
     # matlab.double / matlab.logical / matlab.int* and anything array-like.
     try:
         return np.asarray(x)

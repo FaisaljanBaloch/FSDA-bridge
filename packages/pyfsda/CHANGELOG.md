@@ -6,6 +6,12 @@ All notable changes to `pyfsda` are documented here. The format follows
 
 ## [0.4.0] — unreleased
 
+### Fixed
+- **Nested tables now honor the pandas view** (spec 021). A MATLAB `table` nested inside a returned
+  `struct` (e.g. `corrNominal`'s `Ntable` / `ConfLimtable` / …) is no longer flattened to a bare
+  `ndarray` with its labels dropped. It now marshals to the neutral table-dict by default — like a
+  top-level table — and to a `pandas.DataFrame` (labels preserved) under `frames=True`.
+
 ### Added
 - **Python dict → MATLAB struct input marshalling** (spec 020). A `dict` argument (or option value) now
   crosses as a MATLAB `struct` — recursively: nested `dict` → struct, `list[str]` → cellstr, other lists
