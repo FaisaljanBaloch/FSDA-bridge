@@ -18,6 +18,15 @@ Optional, passed as name-value keywords:
 | `msg` | set to 0 to silence progress messages |
 | `plots` | set to 0 for no plot |
 
+## Output arguments
+
+| Value | Type | Description |
+|---|---|---|
+| `loc` | `Matrix{Float64}` | `1 x v` robust centre |
+| `cov` | `Matrix{Float64}` | `v x v` robust covariance |
+| `md` | `Matrix{Float64}` | `n x 1` distance of each unit from that centre |
+| `outliers` | `Matrix{Float64}` | the units judged too far away |
+
 ## Example
 
 ```julia
@@ -46,17 +55,17 @@ stop_engine()
 
 ## Output
 
+```
+units flagged as outliers: 9 of 200
+flagged units: [1, 2, 3, 4, 5, 15, 21, 84, 143]
+```
+
 A `Dict` with `loc`, the robust centre, `cov`, the robust covariance, `md`, the
 distance of each unit from that centre, and `outliers`, the units judged too
 far away.
 
 The five planted points are all found. The others are ordinary points near the
 edge of the cloud; with 200 random points a few always fall there.
-
-```
-units flagged as outliers: 9 of 200
-flagged units: [1, 2, 3, 4, 5, 15, 21, 84, 143]
-```
 
 ## See also
 

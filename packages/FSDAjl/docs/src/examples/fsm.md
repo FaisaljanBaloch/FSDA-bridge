@@ -21,6 +21,14 @@ Optional, passed as name-value keywords:
 
 Without `msg = 0` this prints a long block of signal detection diagnostics.
 
+## Output arguments
+
+| Value | Type | Description |
+|---|---|---|
+| `outliers` | `Matrix{Float64}` | the units flagged |
+| `loc` | `Matrix{Float64}` | `1 x v` centre from the clean units only |
+| `mmd` | `Matrix{Float64}` | minimum Mahalanobis distance at each step |
+
 ## Example
 
 ```julia
@@ -48,17 +56,17 @@ stop_engine()
 
 ## Output
 
+```
+units flagged as outliers: 4 of 200
+flagged units: [1, 2, 3, 5]
+```
+
 A `Dict` with `outliers`, the units flagged, `loc`, the centre computed from
 the clean units only, and `mmd`, the minimum Mahalanobis distance at each step.
 
 FSM finds four of the five planted units and misses unit 4, while mcd on the
 same data finds all five. Neither is wrong; they judge outlyingness
 differently and can disagree on a borderline point.
-
-```
-units flagged as outliers: 4 of 200
-flagged units: [1, 2, 3, 5]
-```
 
 ## See also
 

@@ -21,6 +21,13 @@ Optional, passed as name-value keywords:
 | `plots` | set to 0 for no plot |
 | `weights` | set to 1 to weight clusters by size |
 
+## Output arguments
+
+| Value | Type | Description |
+|---|---|---|
+| `idx` | `Matrix{Float64}` | cluster label per unit, 0 meaning trimmed |
+| `muopt` | `Matrix{Float64}` | `k x v`, one centroid per row |
+
 ## Example
 
 ```julia
@@ -51,6 +58,12 @@ stop_engine()
 
 ## Output
 
+```
+  cluster 1    71 eruptions  centroid     4.35     4.08
+  cluster 2    87 eruptions  centroid     4.35     2.01
+  cluster 3    86 eruptions  centroid     2.02     4.50
+```
+
 A `Dict` in which `idx` gives the cluster label of every unit, with 0 meaning
 the unit was trimmed, and `muopt` holds one centroid per row.
 
@@ -59,12 +72,6 @@ its centroids agree with these to within 0.06 on every one. tclust can model
 each cluster's shape and tkmeans cannot, but these clusters are roughly round
 and similarly sized, so the extra flexibility buys nothing here. It would
 matter on data with elongated or very unequal clusters.
-
-```
-  cluster 1    71 eruptions  centroid     4.35     4.08
-  cluster 2    87 eruptions  centroid     4.35     2.01
-  cluster 3    86 eruptions  centroid     2.02     4.50
-```
 
 ## See also
 
