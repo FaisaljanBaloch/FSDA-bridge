@@ -68,6 +68,14 @@ FSM finds four of the five planted units and misses unit 4, while mcd on the
 same data finds all five. Neither is wrong; they judge outlyingness
 differently and can disagree on a borderline point.
 
+The minimum Mahalanobis distance at each step against its confidence envelopes. The signal is detected at step 194.
+
+![](../assets/fsm_1.png)
+
+Each pair of variables plotted against each other, with histograms on the diagonal. The flagged units are shown in red.
+
+![](../assets/fsm_2.png)
+
 ## See also
 
 - FSM documentation: <https://rosa.unipr.it/FSDA/FSM.html>

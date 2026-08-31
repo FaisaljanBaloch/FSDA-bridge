@@ -67,6 +67,26 @@ far away.
 The five planted points are all found. The others are ordinary points near the
 edge of the cloud; with 200 random points a few always fall there.
 
+Each unit's distance from the robust centre, plotted against its index. The red line is the 97.5 percent band, and the units above it are labelled.
+
+![](../assets/mcd_1.png)
+
+FSDA also opens this figure, which is left empty.
+
+![](../assets/mcd_2.png)
+
+Each pair of variables plotted against each other, with histograms on the diagonal. The units flagged by the raw estimate are shown in red.
+
+![](../assets/mcd_3.png)
+
+The same scatter matrix after reweighting.
+
+![](../assets/mcd_4.png)
+
+The scatter matrix on the same axes as the original data.
+
+![](../assets/mcd_5.png)
+
 ## See also
 
 - mcd documentation: <https://rosa.unipr.it/FSDA/mcd.html>

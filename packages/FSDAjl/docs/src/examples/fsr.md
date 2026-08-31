@@ -73,6 +73,14 @@ A `Dict` keyed by the FSDA field names. `ListOut` holds the units flagged as
 outliers, `beta` the estimated coefficients, and `mdr` the minimum deletion
 residual at each step of the search.
 
+The response against each predictor, with the flagged units circled in red.
+
+![](../assets/fsr_1.png)
+
+The minimum deletion residual at each step against its confidence envelopes. The search crosses the envelope at step 195, which is the signal.
+
+![](../assets/fsr_2.png)
+
 ## See also
 
 - FSR documentation: <https://rosa.unipr.it/FSDA/FSR.html>
