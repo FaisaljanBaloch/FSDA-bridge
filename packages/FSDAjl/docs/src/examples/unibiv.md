@@ -63,6 +63,10 @@ unusual notes, five are genuine and five are forged. It looks at one or two
 variables at a time, so it finds notes with an extreme single measurement
 rather than notes that are odd in the way a forgery is.
 
+The confidence ellipses drawn for each pair of variables, with the units falling outside them marked.
+
+![](../assets/unibiv_1.png)
+
 ## See also
 
 - unibiv documentation: <https://rosa.unipr.it/FSDA/unibiv.html>

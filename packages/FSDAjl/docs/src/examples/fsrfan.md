@@ -83,6 +83,10 @@ close to zero throughout.
 The full sample row is exactly what the Score example produces on the same
 data. Score answers the question once; FSRfan shows how the answer held up.
 
+The fan plot: the score statistic for each candidate lambda, monitored along the search.
+
+![](../assets/fsrfan_1.png)
+
 ## See also
 
 - FSRfan documentation: <https://rosa.unipr.it/FSDA/FSRfan.html>

@@ -72,6 +72,10 @@ Read each centroid as a pair. Old Faithful alternates, so there are clusters
 for short-then-long and long-then-short, but none where both this eruption and
 the previous one were short.
 
+The three clusters found, each in its own colour, with the trimmed units shown as black crosses.
+
+![](../assets/tclust_2.png)
+
 ## See also
 
 - tclust documentation: <https://rosa.unipr.it/FSDA/tclust.html>

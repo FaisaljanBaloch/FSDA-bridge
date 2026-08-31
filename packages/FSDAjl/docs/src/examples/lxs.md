@@ -76,6 +76,10 @@ intercept closer to zero and flags one further unit.
 One caveat: FSR uses LXS internally to choose where its search begins, so
 agreement between the two is not independent confirmation.
 
+The residuals from the robust fit, with the flagged units separated from the rest.
+
+![](../assets/lxs_1.png)
+
 ## See also
 
 - LXS documentation: <https://rosa.unipr.it/FSDA/LXS.html>

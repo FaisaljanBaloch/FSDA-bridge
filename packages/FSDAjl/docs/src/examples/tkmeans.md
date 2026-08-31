@@ -73,6 +73,10 @@ each cluster's shape and tkmeans cannot, but these clusters are roughly round
 and similarly sized, so the extra flexibility buys nothing here. It would
 matter on data with elongated or very unequal clusters.
 
+The three clusters found, each in its own colour, with the trimmed units shown as black crosses.
+
+![](../assets/tkmeans_1.png)
+
 ## See also
 
 - tkmeans documentation: <https://rosa.unipr.it/FSDA/tkmeans.html>

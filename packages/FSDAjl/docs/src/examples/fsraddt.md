@@ -72,6 +72,10 @@ significant at the usual 5 percent level.
 Here X3 matters at every step, X1 at almost none, and X2 only once certain
 observations are in. A plain t test on the full sample would hide that.
 
+The deletion t statistic for each predictor, monitored along the search.
+
+![](../assets/fsraddt_1.png)
+
 ## See also
 
 - FSRaddt documentation: <https://rosa.unipr.it/FSDA/FSRaddt.html>

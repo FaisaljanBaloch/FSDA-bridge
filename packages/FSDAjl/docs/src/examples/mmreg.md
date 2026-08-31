@@ -83,6 +83,10 @@ On the same data LXS flags units 1 to 5 plus 40 and 146. MMreg finds all of
 those and adds 54 and 80, so the two agree on the planted outliers and differ
 only on borderline cases.
 
+The residuals from the MM estimate, with the flagged units marked.
+
+![](../assets/mmreg_1.png)
+
 ## See also
 
 - MMreg documentation: <https://rosa.unipr.it/FSDA/MMreg.html>

@@ -73,6 +73,10 @@ The distance is flat near 3.3 through the early steps and climbs to 5.8 by
 the end. Early on the search adds notes that sit comfortably with those
 already in; by the end the only notes left are unlike the rest.
 
+The minimum Mahalanobis distance at each step, with its confidence envelopes.
+
+![](../assets/fsmeda_1.png)
+
 ## See also
 
 - FSMeda documentation: <https://rosa.unipr.it/FSDA/FSMeda.html>
