@@ -20,13 +20,6 @@ A Julia package for calling [FSDA](https://github.com/UniprJRC/FSDA) (the MATLAB
 | -------------- | ----------------------- |
 | R2026a         | `matlabengine==26.1.*`  |
 
-## Installation
-
-```julia
-using Pkg
-Pkg.add("FSDA")   # once registered in General
-```
-
 ## Set up a Python virtual environment
 
 FSDA.jl needs a Python environment with `numpy` and `matlabengine` installed.
@@ -41,7 +34,12 @@ source .venv/bin/activate          # macOS/Linux
 pip install matlabengine==26.1.*
 pip install numpy
 ```
+## Installation
 
+```julia
+using Pkg
+Pkg.add("FSDA")   # once registered in General
+```
 
 ### Required environment configuration
 
