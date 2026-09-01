@@ -27,15 +27,39 @@ using Pkg
 Pkg.add("FSDA")   # once registered in General
 ```
 
+## Set up a Python virtual environment
+
+FSDA.jl needs a Python environment with `numpy` and `matlabengine` installed.
+
+Create and populate a venv, matching the `matlabengine` version to your MATLAB release (see Install matrix):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate          # macOS/Linux
+.venv\Scripts\activate             # Windows (PowerShell)
+
+pip install matlabengine==26.1.*
+pip install numpy
+```
+
+
 ### Required environment configuration
 
-FSDA.jl calls into an existing Python environment via
+FSDA.jl calls into that Python environment via
 [PythonCall.jl](https://github.com/JuliaPy/PythonCall.jl). You must tell PythonCall to use that environment rather than provisioning its own via Conda. Conda cannot install MATLAB's `matlabengine` for you, and letting PythonCall try will produce confusing errors.
 
+macOS/Linux
 ```bash
 export JULIA_CONDAPKG_BACKEND=Null
 export FSDA_DEV_VENV=/path/to/your/venv/bin/python
 export JULIA_PYTHONCALL_EXE=/path/to/your/venv/bin/python
+```
+
+Windows
+```powershell
+$env:JULIA_CONDAPKG_BACKEND = "Null"
+$env:FSDA_DEV_VENV = "C:\path\to\your\venv\Scripts\python.exe"
+$env:JULIA_PYTHONCALL_EXE = "C:\path\to\your\venv\Scripts\python.exe"
 ```
 
 Set these **before** starting Julia / loading the package. FSDA.jl checks `JULIA_CONDAPKG_BACKEND` at load time and will warn loudly if it isn't set to `"Null"`.
@@ -44,9 +68,9 @@ Set these **before** starting Julia / loading the package. FSDA.jl checks `JULIA
 ## Quick start
 
 ```julia
-
 using FSDA
 using Statistics
+
 h = FSDA.start_engine()
 Y=randn(10,2);
 MU=median(Y); 
