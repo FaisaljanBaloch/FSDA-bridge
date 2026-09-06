@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# MATLAB temp / autosave
+*.asv
+*.mat~
+
+# Julia generated lockfile (specs ship only Project.toml)
+Manifest.toml
+
+# OS cruft
+.DS_Store
+Thumbs.db
