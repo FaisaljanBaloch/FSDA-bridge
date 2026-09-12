@@ -96,8 +96,15 @@ end
 # it accepts as cell arrays; scalars / strings / bools cross via PythonCall.
 function _to_py(a)
     if a === nothing
-        return _np.asarray(Py(Float64[]))          # MATLAB has no None; use []
+        # No silent conversion: nothing and [] mean different things, so let
+        # matlabengine raise its own error rather than guessing an empty array.
+        @warn "passing `nothing` to MATLAB is not supported; matlabengine will reject it"
+        return Py(a)
     elseif a isa AbstractDict
+        # A Python dict reaches the workspace without engine.py's to_matlab
+        # touching it: to_matlab has no dict branch, so it falls through, and
+        # matlabengine accepts a plain dict as a struct. Worth knowing if an
+        # incompatibility ever needs tracing back.
         d = _builtins.dict()
         for (k, v) in a
             d[string(k)] = _to_py(v)
