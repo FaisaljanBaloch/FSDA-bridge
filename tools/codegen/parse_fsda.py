@@ -8,6 +8,8 @@ import argparse
 import re
 import warnings
 from pathlib import Path
+import json
+import logging
 
 _BEGIN_CODE = "%% Beginning of code"
 _SIG_RE = re.compile(r"^function\s*(?:\[(?P<multi>[^\]]*)\]\s*=|(?P<single>\w+)\s*=)?\s*\w+\s*\(")
@@ -197,7 +199,33 @@ def parse_json_signatures(json_path: Path) -> dict:
     Returns all signatures grouped by function name. Keys starting
     with _ are excluded. See Spec 023.
     """
-    raise NotImplementedError
+    def multikeys_hook(pairs):
+        d = {}
+        # Track keys that we have explicitly converted into a list of duplicates
+        dupes = set()
+        
+        for k, v in pairs:
+            if k in d:
+                # If we already marked this key as a duplicate, just append
+                if k in dupes:
+                    d[k].append(v)
+                # Otherwise, wrap the existing value and the new one in a new list
+                else:
+                    d[k] = [d[k], v]
+                    dupes.add(k)
+            else:
+                d[k] = v
+        return d
+
+    with open(json_path, 'r', encoding='utf-8') as f:
+        raw_data = json.loads(f.read(), object_pairs_hook=multikeys_hook)
+
+    # Filter out system keys and normalize every function entry to a list
+    return {
+        key: (value if isinstance(value, list) else [value])
+        for key, value in raw_data.items()
+        if not key.startswith('_')
+    }
 
 
 def extract_m_prose(m_path: Path) -> dict:
