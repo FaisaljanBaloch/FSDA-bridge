@@ -50,9 +50,11 @@ def enumerate_toolbox(fsda_root: Path) -> list:
     paths where they exist, and excludes private/ directories.
     Does not open JSON files. See Spec 022.
     """
-    fsda_root = Path(fsda_root)
+
+    if not fsda_root.exists():
+        raise FileNotFoundError(f"FSDA root not found: {fsda_root}")
     if not fsda_root.is_dir():
-        raise NotADirectoryError(f"FSDA root not found: {fsda_root}")
+        raise NotADirectoryError(f"FSDA root is not a directory: {fsda_root}")
 
     entries = []
     for contents in sorted(fsda_root.rglob("Contents.m")):
