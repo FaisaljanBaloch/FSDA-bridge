@@ -25,7 +25,7 @@ _CONTENTS_LINE = re.compile(
 
 def _read_text(path: Path) -> str:
     """Read an FSDA source file. FSDA files use CRLF and are mostly UTF-8."""
-    return path.read_text(encoding="utf-8-sig", errors="replace").replace("\r\n", "\n")
+    return path.read_text(encoding="utf-8-sig", errors="replace")
 
 
 def _parse_contents(contents_path: Path, label: str = "") -> dict:
