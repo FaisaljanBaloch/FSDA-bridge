@@ -133,7 +133,7 @@ def _isolate_preamble(m_path: Path) -> tuple:
     start with `function`, or has no marker.
     """
     try:
-        text = m_path.read_text(encoding="utf-8", errors="replace")
+        text = _read_text(m_path)
     except OSError as exc:
         warnings.warn(f"_extract_m_prose: cannot read {m_path}: {exc}")
         return None
