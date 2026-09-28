@@ -124,7 +124,7 @@ _BEGIN_CODE = "%% Beginning of code"
 _SIG_RE = re.compile(r"^function\s*(?:\[(?P<multi>[^\]]*)\]\s*=|(?P<single>\w+)\s*=)?\s*\w+\s*\(")
 
 
-def _isolate_preamble(m_path: Path) -> tuple:
+def _isolate_preamble(m_path: Path) -> tuple[str, list[str]] | None:
     """Return (signature_line, preamble_lines), or None on failure.
 
     The preamble is everything between the `function` signature line and
@@ -292,7 +292,7 @@ def _extract_params(lines: list, bounds: dict) -> dict:
     return params
 
 
-def _extract_m_prose(m_path: Path) -> dict:
+def _extract_m_prose(m_path: Path) -> dict | None:
     """Extract prose from a single .m file's preamble.
 
     Returns long description, per-parameter descriptions, outputs,
