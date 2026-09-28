@@ -11,6 +11,115 @@ import warnings
 from pathlib import Path
 import json
 
+log = logging.getLogger("parse_fsda")
+
+def _read_text(path: Path) -> str:
+    """Read an FSDA source file. FSDA files use CRLF and are mostly UTF-8."""
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+# Start of _enumerate_toolbox():
+
+# One function per line in Contents.m:
+#   %   tclust   - Computes trimmed clustering ...   - CLUS-RobClaMULT- 2025 Dec 19
+# The category can touch the next hyphen with no space ("CLUS-RobClaMULT-"),
+# and categories contain hyphens themselves, so splitting on " - " is not
+# enough. Anchor on the date at the end instead and take the non-space token
+# before it as the category.
+_CONTENTS_LINE = re.compile(
+    r"^%\s+(?P<name>[A-Za-z]\w*)\s+-\s+(?P<desc>.*?)\s+-\s*"
+    r"(?P<category>\S+?)\s*-\s*(?P<date>\d{4}\s+[A-Za-z]{3}\s+\d{1,2})\s*$"
+)
+
+
+def _parse_contents(contents_path: Path, label: str = "") -> dict:
+    """Return {function name: category} from one Contents.m file."""
+    found = {}
+    for line in _read_text(contents_path).splitlines():
+        m = _CONTENTS_LINE.match(line)
+        if not m or m.group("name") == "Name":  # skip the column header row
+            continue
+        name = m.group("name")
+        if name in found:
+            log.warning("%s: %s listed twice, keeping the first", label or contents_path, name)
+            continue
+        found[name] = m.group("category")
+    return found
+
+def _enumerate_toolbox(fsda_root: Path) -> list:
+    """Walk the FSDA toolbox tree and return the function inventory.
+
+    Discovers Contents.m files per subfolder, records functionSignatures.json
+    paths where they exist, and excludes private/ directories.
+    Does not open JSON files. See Spec 022.
+    """
+
+    if not fsda_root.exists():
+        raise FileNotFoundError(f"FSDA root not found: {fsda_root}")
+    if not fsda_root.is_dir():
+        raise NotADirectoryError(f"FSDA root is not a directory: {fsda_root}")
+
+    entries = []
+    for contents in sorted(fsda_root.rglob("Contents.m")):
+        folder = contents.parent
+        rel = folder.relative_to(fsda_root)
+        if "private" in rel.parts:
+            continue
+
+        functions = {}
+        for name, category in _parse_contents(
+                contents, contents.relative_to(fsda_root).as_posix()).items():
+            m_rel = rel / f"{name}.m"
+            if not (fsda_root / m_rel).is_file():
+                log.warning("%s lists %s but %s does not exist",
+                            contents.relative_to(fsda_root).as_posix(), name,
+                            m_rel.as_posix())
+            functions[name] = {"m_path": m_rel.as_posix(), "category": category}
+
+        json_file = folder / "functionSignatures.json"
+        entries.append({
+            "json_path": (rel / json_file.name).as_posix() if json_file.is_file() else None,
+            "functions": functions,
+        })
+    return entries
+
+# Start of _parse_json_signatures():
+
+def _parse_json_signatures(json_path: Path) -> dict:
+    """Parse a single functionSignatures.json, preserving duplicate keys.
+
+    Returns all signatures grouped by function name. Keys starting
+    with _ are excluded. See Spec 023.
+    """
+    def multikeys_hook(pairs):
+        d = {}
+        # Track keys that we have explicitly converted into a list of duplicates
+        dupes = set()
+
+        for k, v in pairs:
+            if k in d:
+                # If we already marked this key as a duplicate, just append
+                if k in dupes:
+                    d[k].append(v)
+                # Otherwise, wrap the existing value and the new one in a new list
+                else:
+                    d[k] = [d[k], v]
+                    dupes.add(k)
+            else:
+                d[k] = v
+        return d
+
+    with open(json_path, 'r', encoding='utf-8') as f:
+        raw_data = json.loads(f.read(), object_pairs_hook=multikeys_hook)
+
+    # Filter out system keys and normalize every function entry to a list
+    return {
+        key: (value if isinstance(value, list) else [value])
+        for key, value in raw_data.items()
+        if not key.startswith('_')
+    }
+
+# Start of _extract_m_prose():
+
 _BEGIN_CODE = "%% Beginning of code"
 _SIG_RE = re.compile(r"^function\s*(?:\[(?P<multi>[^\]]*)\]\s*=|(?P<single>\w+)\s*=)?\s*\w+\s*\(")
 
@@ -26,17 +135,17 @@ def _isolate_preamble(m_path: Path) -> tuple:
     try:
         text = m_path.read_text(encoding="utf-8", errors="replace")
     except OSError as exc:
-        warnings.warn(f"extract_m_prose: cannot read {m_path}: {exc}")
+        warnings.warn(f"_extract_m_prose: cannot read {m_path}: {exc}")
         return None
 
     lines = text.splitlines()
     if not lines or not lines[0].lstrip().startswith("function"):
-        warnings.warn(f"extract_m_prose: {m_path} does not start with a 'function' line")
+        warnings.warn(f"_extract_m_prose: {m_path} does not start with a 'function' line")
         return None
 
     end_idx = next((i for i, line in enumerate(lines) if line.strip() == _BEGIN_CODE), None)
     if end_idx is None:
-        warnings.warn(f"extract_m_prose: no '{_BEGIN_CODE}' marker in {m_path}")
+        warnings.warn(f"_extract_m_prose: no '{_BEGIN_CODE}' marker in {m_path}")
         return None
 
     preamble = [line[1:].lstrip(" ") if line.startswith("%") else line for line in lines[1:end_idx]]
@@ -181,112 +290,6 @@ def _extract_params(lines: list, bounds: dict) -> dict:
         for name, fragments in blocks.items():
             params[name] = _join_block(fragments)
     return params
-
-log = logging.getLogger("parse_fsda")
-
-# One function per line in Contents.m:
-#   %   tclust   - Computes trimmed clustering ...   - CLUS-RobClaMULT- 2025 Dec 19
-# The category can touch the next hyphen with no space ("CLUS-RobClaMULT-"),
-# and categories contain hyphens themselves, so splitting on " - " is not
-# enough. Anchor on the date at the end instead and take the non-space token
-# before it as the category.
-_CONTENTS_LINE = re.compile(
-    r"^%\s+(?P<name>[A-Za-z]\w*)\s+-\s+(?P<desc>.*?)\s+-\s*"
-    r"(?P<category>\S+?)\s*-\s*(?P<date>\d{4}\s+[A-Za-z]{3}\s+\d{1,2})\s*$"
-)
-
-
-def _read_text(path: Path) -> str:
-    """Read an FSDA source file. FSDA files use CRLF and are mostly UTF-8."""
-    return path.read_text(encoding="utf-8-sig", errors="replace")
-
-
-def _parse_contents(contents_path: Path, label: str = "") -> dict:
-    """Return {function name: category} from one Contents.m file."""
-    found = {}
-    for line in _read_text(contents_path).splitlines():
-        m = _CONTENTS_LINE.match(line)
-        if not m or m.group("name") == "Name":  # skip the column header row
-            continue
-        name = m.group("name")
-        if name in found:
-            log.warning("%s: %s listed twice, keeping the first", label or contents_path, name)
-            continue
-        found[name] = m.group("category")
-    return found
-
-
-def _enumerate_toolbox(fsda_root: Path) -> list:
-    """Walk the FSDA toolbox tree and return the function inventory.
-
-    Discovers Contents.m files per subfolder, records functionSignatures.json
-    paths where they exist, and excludes private/ directories.
-    Does not open JSON files. See Spec 022.
-    """
-
-    if not fsda_root.exists():
-        raise FileNotFoundError(f"FSDA root not found: {fsda_root}")
-    if not fsda_root.is_dir():
-        raise NotADirectoryError(f"FSDA root is not a directory: {fsda_root}")
-
-    entries = []
-    for contents in sorted(fsda_root.rglob("Contents.m")):
-        folder = contents.parent
-        rel = folder.relative_to(fsda_root)
-        if "private" in rel.parts:
-            continue
-
-        functions = {}
-        for name, category in _parse_contents(
-                contents, contents.relative_to(fsda_root).as_posix()).items():
-            m_rel = rel / f"{name}.m"
-            if not (fsda_root / m_rel).is_file():
-                log.warning("%s lists %s but %s does not exist",
-                            contents.relative_to(fsda_root).as_posix(), name,
-                            m_rel.as_posix())
-            functions[name] = {"m_path": m_rel.as_posix(), "category": category}
-
-        json_file = folder / "functionSignatures.json"
-        entries.append({
-            "json_path": (rel / json_file.name).as_posix() if json_file.is_file() else None,
-            "functions": functions,
-        })
-    return entries
-
-
-def _parse_json_signatures(json_path: Path) -> dict:
-    """Parse a single functionSignatures.json, preserving duplicate keys.
-
-    Returns all signatures grouped by function name. Keys starting
-    with _ are excluded. See Spec 023.
-    """
-    def multikeys_hook(pairs):
-        d = {}
-        # Track keys that we have explicitly converted into a list of duplicates
-        dupes = set()
-
-        for k, v in pairs:
-            if k in d:
-                # If we already marked this key as a duplicate, just append
-                if k in dupes:
-                    d[k].append(v)
-                # Otherwise, wrap the existing value and the new one in a new list
-                else:
-                    d[k] = [d[k], v]
-                    dupes.add(k)
-            else:
-                d[k] = v
-        return d
-
-    with open(json_path, 'r', encoding='utf-8') as f:
-        raw_data = json.loads(f.read(), object_pairs_hook=multikeys_hook)
-
-    # Filter out system keys and normalize every function entry to a list
-    return {
-        key: (value if isinstance(value, list) else [value])
-        for key, value in raw_data.items()
-        if not key.startswith('_')
-    }
 
 
 def _extract_m_prose(m_path: Path) -> dict:
