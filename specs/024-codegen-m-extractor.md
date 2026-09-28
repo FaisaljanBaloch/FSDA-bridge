@@ -13,7 +13,7 @@
 
 ## Design
 
-- **Files:** `tools/codegen/parse_fsda.py` (function `extract_m_prose`)
+- **Files:** `tools/codegen/parse_fsda.py` (function `_extract_m_prose`)
 - **Input:** a `pathlib.Path` to a single `.m` file.
 - **Output:**
 

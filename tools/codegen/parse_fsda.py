@@ -216,7 +216,7 @@ def _parse_contents(contents_path: Path, label: str = "") -> dict:
     return found
 
 
-def enumerate_toolbox(fsda_root: Path) -> list:
+def _enumerate_toolbox(fsda_root: Path) -> list:
     """Walk the FSDA toolbox tree and return the function inventory.
 
     Discovers Contents.m files per subfolder, records functionSignatures.json
@@ -254,7 +254,7 @@ def enumerate_toolbox(fsda_root: Path) -> list:
     return entries
 
 
-def parse_json_signatures(json_path: Path) -> dict:
+def _parse_json_signatures(json_path: Path) -> dict:
     """Parse a single functionSignatures.json, preserving duplicate keys.
 
     Returns all signatures grouped by function name. Keys starting
@@ -289,7 +289,7 @@ def parse_json_signatures(json_path: Path) -> dict:
     }
 
 
-def extract_m_prose(m_path: Path) -> dict:
+def _extract_m_prose(m_path: Path) -> dict:
     """Extract prose from a single .m file's preamble.
 
     Returns long description, per-parameter descriptions, outputs,
