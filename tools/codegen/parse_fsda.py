@@ -196,6 +196,11 @@ _CONTENTS_LINE = re.compile(
 )
 
 
+# Folders of internal helpers, skipped. "privateFS" is not named private but
+# holds private helpers, so it is excluded by name.
+_PRIVATE_FOLDERS = {"private", "privatefs"}
+
+
 def _read_text(path: Path) -> str:
     """Read an FSDA source file. FSDA files use CRLF and are mostly UTF-8."""
     return path.read_text(encoding="utf-8-sig", errors="replace")
@@ -233,7 +238,7 @@ def enumerate_toolbox(fsda_root: Path) -> list:
     for contents in sorted(fsda_root.rglob("Contents.m")):
         folder = contents.parent
         rel = folder.relative_to(fsda_root)
-        if "private" in rel.parts:
+        if any(part.lower() in _PRIVATE_FOLDERS for part in rel.parts):
             continue
 
         functions = {}
