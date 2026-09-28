@@ -300,7 +300,7 @@ def _extract_m_prose(m_path: Path) -> dict:
     """
     isolated = _isolate_preamble(m_path)
     if isolated is None:
-        return {}
+        return None
     sig_line, preamble = isolated
     _, has_varargout = _extract_output_names(sig_line)
     preamble = _strip_example_blocks(preamble)
