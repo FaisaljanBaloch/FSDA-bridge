@@ -12,7 +12,7 @@
 
 ## Design
 
-- **Files:** `tools/codegen/parse_fsda.py` (function `enumerate_toolbox`)
+- **Files:** `tools/codegen/parse_fsda.py` (function `_enumerate_toolbox`)
 - **Input:** a `pathlib.Path` to the FSDA toolbox root (e.g. `/path/to/FSDA/toolbox`).
 - **Output:**
 

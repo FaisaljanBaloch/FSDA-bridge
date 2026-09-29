@@ -12,7 +12,7 @@
 
 ## Design
 
-- **Files:** `tools/codegen/parse_fsda.py` (function `parse_json_signatures`)
+- **Files:** `tools/codegen/parse_fsda.py` (function `_parse_json_signatures`)
 - **Input:** a `pathlib.Path` to a single `functionSignatures.json` file.
 - **Output:**
 
