@@ -55,16 +55,15 @@
 
 ## Tasks
 
-- [ ] #p1 Read all lines after the `function` line up to `%% Beginning of code`
-- [ ] #p1 Handle `%{ %}` blocks (skip them, do not let them interfere with section parsing)
-- [ ] #p1 Extract the long description (text between the `docsearchFS` link and `Required input arguments:`)
-- [ ] #p1 Extract per-parameter prose from Required and Optional input sections (detect `name :` pattern for new parameters, accumulate continuation lines)
-- [ ] #p1 Extract output argument names from the `function` line
-- [ ] #p1 Extract output descriptions from the `Output:` section, including struct fields via the `out.fieldname =` pattern
-- [ ] #p2 Extract `See also` entries (comma-separated function names)
-- [ ] #p2 Extract `References` entries
-- [ ] #p2 Extract optional outputs from `Optional Output:` section (append to `outputs` list)
 
-### Done
+### Done (2026-09-27)
 
-(move checked items here with a date)
+- [X] #p1 Read all lines after the `function` line up to `%% Beginning of code`
+- [x] #p1 Handle `%{ %}` blocks (skip them, do not let them interfere with section parsing)
+- [x] #p1 Extract the long description (text between the `docsearchFS` link and `Required input arguments:`)
+- [x] #p1 Extract per-parameter prose from Required and Optional input sections (detect `name :` pattern for new parameters, accumulate continuation lines)
+- [x] #p1 Extract output argument names from the `function` line
+- [x] #p1 Extract output descriptions from the `Output:` section, including struct fields via the `out.fieldname =` pattern
+- [x] #p2 Extract `See also` entries (comma-separated function names)
+- [x] #p2 Extract `References` entries
+- [x] #p2 Extract optional outputs from `Optional Output:` section (append to `outputs` list)

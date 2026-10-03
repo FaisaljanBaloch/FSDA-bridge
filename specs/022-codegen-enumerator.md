@@ -45,11 +45,10 @@ Each entry is one folder. `json_path` is null if the folder has a `Contents.m` b
 
 ## Tasks
 
-- [ ] #p1 Walk the toolbox tree, discover all `Contents.m` files and check for `functionSignatures.json`, skip `private/` dirs
-- [ ] #p1 Parse `Contents.m` lines for function names
-- [ ] #p1 Return per-folder entries with `json_path` and `functions`
-- [ ] #p2 Extract category from `Contents.m` line
 
-### Done
+### Done (2026-09-27)
 
-(move checked items here with a date)
+- [x] #p1 Walk the toolbox tree, discover all `Contents.m` files and check for `functionSignatures.json`, skip `private/` dirs
+- [x] #p1 Parse `Contents.m` lines for function names
+- [x] #p1 Return per-folder entries with `json_path` and `functions`
+- [x] #p2 Extract category from `Contents.m` line

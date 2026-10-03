@@ -35,13 +35,12 @@
 
 ## Tasks
 
-- [ ] #p1 Read a JSON file and preserve duplicate top-level keys in a list-valued dict
-- [ ] #p1 Exclude keys starting with `_` (`_typedefs`, `_schemaVersion`) from the output
-- [ ] #p1 Return the output structure described above
 - [ ] #p2 Test against all 8 `functionSignatures.json` files in the FSDA toolbox
-- [ ] #p2 Verify that known duplicate-key functions (e.g. `MixSim`, `CorAna`, `corrNominal`) produce multiple entries in the list
 - [ ] #p3 Warn on any structural anomalies (e.g. a function entry missing `inputs` or `description`)
 
-### Done
+### Done (2026-09-27)
 
-(move checked items here with a date)
+- [x] #p1 Read a JSON file and preserve duplicate top-level keys in a list-valued dict
+- [x] #p1 Exclude keys starting with `_` (`_typedefs`, `_schemaVersion`) from the output
+- [x] #p1 Return the output structure described above
+- [x] #p2 Verify that known duplicate-key functions (e.g. `MixSim`, `CorAna`, `corrNominal`) produce multiple entries in the list

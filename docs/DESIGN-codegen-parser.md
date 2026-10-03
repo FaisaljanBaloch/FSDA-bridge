@@ -39,17 +39,20 @@ Each FSDA toolbox folder has a `Contents.m` listing functions with one-line desc
 
 Both JSON and `Contents.m` are hard dependencies: a function must appear in both to get an IR record. Every user-facing `.m` file has a long description, output fields, and `See also` (publishFS enforces this), so the `.m`-sourced fields should always be present in practice. The pipeline should warn if they are missing, as that likely indicates a parse error rather than genuinely absent content.
 
-| Information | Source |
-|---|---|
-| Parameter existence, order, kind | JSON |
-| Parameter types | JSON |
-| Parameter defaults | JSON |
-| Function short description | JSON `description` |
-| Parameter description (prose) | `.m` preamble |
-| Function long description | `.m` preamble |
-| Output struct fields | `.m` preamble |
-| See also | `.m` preamble |
-| Category | `Contents.m` |
+| Information                      | Source             |
+| -------------------------------- | ------------------ |
+| Parameter existence, order, kind | JSON               |
+| Parameter types                  | JSON               |
+| Parameter defaults               | JSON               |
+| Function short description       | JSON `description` |
+| Parameter short description      | JSON `purpose`     |
+| Parameter long description       | `.m` preamble      |
+| Function long description        | `.m` preamble      |
+| Output short description         | `.m` preamble      |
+| Output long description          | `.m` preamble      |
+| Output struct fields             | `.m` preamble      |
+| See also                         | `.m` preamble      |
+| Category                         | `Contents.m`       |
 
 ## 3. Pipeline
 
@@ -186,14 +189,16 @@ Optional sections not captured: `More About:`, `Acknowledgements:`.
 
 Examples (`%{` ... `%}` blocks) are skipped. The extractor does not capture them.
 
-**If a `.m` file is missing or unparseable, the extractor warns and returns an empty result.** The merge step proceeds with JSON data only.
+**If a `.m` file is missing or unparseable, the extractor logs a warning and `None`.** The merge step proceeds with JSON data only.
 
 ### 3.4 Merge step
+
 Executed once per eligible function.
 
 **Input:**
+
 - The function's JSON signature entries (a list; one entry for most functions, multiple for those with duplicate keys).
-- The function's `.m` prose dict (from the extractor, or empty dict if the `.m` was missing/unparseable).
+- The function's `.m` prose dict (from the extractor, or `None` if the `.m` was missing/unparseable).
 
 **Output:** one IR dict (schema in §4).
 
@@ -259,9 +264,12 @@ When a function has multiple JSON entries (mutually exclusive calling convention
     {
       "name": "plots",
       "kind": "namevalue",
-      "matlab_type": [["single", "scalar"], ["double", "scalar"],
-                       ["char", "choices={'contourf','contour','ellipse','boxplotb'}"],
-                       ["struct"]],
+      "matlab_type": [
+        ["single", "scalar"],
+        ["double", "scalar"],
+        ["char", "choices={'contourf','contour','ellipse','boxplotb'}"],
+        ["struct"]
+      ],
       "purpose_short": "Plot on the screen",
       "purpose_long": "Plot type. Scalar 0/1 or a string naming the plot style.",
       "default": null
@@ -274,8 +282,14 @@ When a function has multiple JSON entries (mutually exclusive calling convention
       "short_desc": "A structure containing the following fields",
       "long_desc": "...",
       "fields": [
-        {"name": "idx",    "desc": "n-by-1 vector containing assignment of each unit..."},
-        {"name": "muopt",  "desc": "k-by-v matrix containing cluster centroids..."}
+        {
+          "name": "idx",
+          "desc": "n-by-1 vector containing assignment of each unit..."
+        },
+        {
+          "name": "muopt",
+          "desc": "k-by-v matrix containing cluster centroids..."
+        }
       ]
     },
     {
@@ -330,6 +344,8 @@ The IR can be written to disk as JSON for inspection and for consumption by futu
 **Why JSON is mandatory, not best-effort.** Generating docs without type information looks complete but isn't. A missing page is obviously missing; a wrong type table is silently misleading.
 
 **Why not parse types from `.m` preambles.** The `.m` format is well-documented and consistent, but the type information is embedded in prose: sentence boundaries, `Data Types -` lines, inline `choices` constraints, struct field descriptions. Extracting all of this reliably means replicating a substantial portion of `publishFS` (6,000+ lines of MATLAB). The JSON gives the same information as structured data: `["double", "scalar"]`, `["char", "choices={'eigen','deter'}"]`, explicit `_typedefs` for struct fields. Solving the JSON's known issues (duplicate keys, coverage gaps) is a smaller, more bounded problem than building a second type parser.
+
+**Why output short text comes from the `.m`, not JSON `purpose`.** Inputs take their short text from JSON `purpose`, which is what MATLAB shows in editor tooltips. JSON `outputs`, however, is optional, so there is no guarantee an output has a `purpose` at all. Taking output short text from the `.m` (the first sentence of the output's description) gives every documented output one source and one rule. The asymmetry with inputs is deliberate.
 
 **Why not parse `publishFS` HTML output.** It's a derivative of the `.m` preambles, adds nothing, and its structure depends on rendering choices that can change.
 
