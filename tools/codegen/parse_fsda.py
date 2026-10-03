@@ -7,7 +7,6 @@ Specs 022, 023, 024 define the individual components.
 import argparse
 import logging
 import re
-import warnings
 from pathlib import Path
 import json
 
@@ -154,12 +153,12 @@ def _isolate_preamble(m_path: Path) -> tuple[str, list[str]] | None:
     try:
         text = _read_text(m_path)
     except OSError as exc:
-        warnings.warn(f"_extract_m_prose: cannot read {m_path}: {exc}")
+        log.warning(f"_extract_m_prose: cannot read {m_path}: {exc}")
         return None
 
     lines = text.splitlines()
     if not lines or not lines[0].lstrip().startswith("function"):
-        warnings.warn(
+        log.warning(
             f"_extract_m_prose: {m_path} does not start with a 'function' line"
         )
         return None
@@ -168,7 +167,7 @@ def _isolate_preamble(m_path: Path) -> tuple[str, list[str]] | None:
         (i for i, line in enumerate(lines) if line.strip() == _BEGIN_CODE), None
     )
     if end_idx is None:
-        warnings.warn(f"_extract_m_prose: no '{_BEGIN_CODE}' marker in {m_path}")
+        log.warning(f"_extract_m_prose: no '{_BEGIN_CODE}' marker in {m_path}")
         return None
 
     preamble = [

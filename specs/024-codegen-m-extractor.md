@@ -51,7 +51,7 @@
 - **The preamble format is defined by publishFS.** Files that pass publishFS are guaranteed to follow these conventions. The extractor can rely on the mandatory section headers as delimiters: `Required input arguments:`, `Optional input arguments:`, `Output:`, `See also:`, `References:`.
 - **Output arguments** are extracted from the `function [out, C] = name(...)` line. Each output may or may not have struct sub-fields. Only outputs whose description contains "structure" and "field" have a populated `fields` list. Struct fields are identified by the `out.fieldname =` pattern (with `=`, not `:`).
 - **`%{ %}` example blocks are skipped.** The extractor does not capture them.
-- **If the file is missing or unparseable, warn and return `None`.**
+- **If the file is missing or unparseable, log a warning and return `None`.**
 
 ## Tasks
 
