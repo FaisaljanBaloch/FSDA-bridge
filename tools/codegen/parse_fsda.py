@@ -5,10 +5,11 @@ Specs 022, 023, 024 define the individual components.
 """
 
 import argparse
+import json
 import logging
 import re
+import sys
 from pathlib import Path
-import json
 
 log = logging.getLogger("parse_fsda")
 
@@ -439,6 +440,241 @@ def _extract_m_prose(m_path: Path) -> dict | None:
     }
 
 
+# Start of the orchestrator (main()):
+
+_FSDA_URL = "https://rosa.unipr.it/FSDA/{name}.html"
+
+
+def _normalize_matlab_type(value) -> list:
+    """Normalize one JSON type spec to list-of-lists (OR of AND).
+
+    `"struct"` and `["numeric", "scalar"]` both become a single-element
+    or two-element inner list. `struct:Name` references collapse to
+    `struct`; the typedef is not resolved here. `choices=...` hints are
+    kept verbatim for codegen to interpret later.
+    """
+    atoms = value if isinstance(value, list) else [value]
+    normalized = []
+    for atom in atoms:
+        parts = atom if isinstance(atom, list) else [atom]
+        cleaned = [
+            str(part).split(":", 1)[0] if str(part).startswith("struct:") else str(part)
+            for part in parts
+        ]
+        if cleaned and cleaned not in normalized:
+            normalized.append(cleaned)
+    return normalized
+
+
+def _union_types(first: list, second: list) -> list:
+    """Union two normalized type specs, keeping first-seen order."""
+    merged = list(first)
+    for entry in second:
+        if entry not in merged:
+            merged.append(entry)
+    return merged
+
+
+def _merge_inputs(entries: list) -> list:
+    """Flatten the `inputs` of every signature entry into one list.
+
+    Order follows the first entry; parameters unique to a later entry are
+    appended. Types are unioned across entries; `kind`, `default` and
+    `purpose` come from the first entry that declares the parameter.
+    """
+    by_name = {}
+    order = []
+    for entry in entries:
+        for param in entry.get("inputs") or []:
+            name = param.get("name")
+            if name is None:
+                log.warning("Skipping an input with no name: %r", param)
+                continue
+            if name not in by_name:
+                order.append(name)
+                by_name[name] = {
+                    "name": name,
+                    "kind": param.get("kind"),
+                    "matlab_type": _normalize_matlab_type(param.get("type")),
+                    "purpose_short": param.get("purpose"),
+                    "default": param.get("default"),
+                }
+                continue
+            by_name[name]["matlab_type"] = _union_types(
+                by_name[name]["matlab_type"],
+                _normalize_matlab_type(param.get("type")),
+            )
+    return [by_name[name] for name in order]
+
+
+def _merge_outputs(entries: list) -> list:
+    """Take outputs from the first entry, normalizing each `matlab_type`."""
+    if not entries:
+        return []
+    return [
+        {
+            "name": output.get("name"),
+            "matlab_type": _normalize_matlab_type(output.get("type")),
+            "short_desc": None,
+            "long_desc": None,
+            "fields": [],
+        }
+        for output in entries[0].get("outputs") or []
+    ]
+
+
+def _warn_mismatch(fn_name: str, kind: str, json_names: set, prose_names: set) -> None:
+    """Log names present on one side (JSON or .m preamble) but not the other."""
+    for item in sorted(json_names - prose_names):
+        log.warning("%s: %s %s is in JSON but not the .m preamble", fn_name, kind, item)
+    for item in sorted(prose_names - json_names):
+        log.warning(
+            "%s: %s %s is in the .m preamble but not the JSON", fn_name, kind, item
+        )
+
+
+def _attach_param_prose(name: str, inputs: list, prose_params: dict) -> None:
+    for param in inputs:
+        param["purpose_long"] = prose_params.get(param["name"])
+
+    _warn_mismatch(
+        name,
+        "parameter",
+        {p["name"] for p in inputs},
+        set(prose_params),
+    )
+
+
+def _attach_output_prose(name: str, outputs: list, prose_output_list: list) -> None:
+    # Index by name so lookups match the params path; warn on duplicates
+    # instead of silently letting the last one win.
+    prose_outputs = {}
+    for prose_output in prose_output_list:
+        output_name = prose_output["name"]
+        if output_name in prose_outputs:
+            log.warning(
+                "%s: output %s appears more than once in the .m preamble",
+                name,
+                output_name,
+            )
+        prose_outputs[output_name] = prose_output
+
+    for output in outputs:
+        source = prose_outputs.get(output["name"])
+        if source is None:
+            continue
+        output["short_desc"] = source.get("short_desc")
+        output["long_desc"] = source.get("long_desc")
+        output["fields"] = source.get("fields") or []
+
+    _warn_mismatch(
+        name,
+        "output",
+        {o["name"] for o in outputs},
+        set(prose_outputs),
+    )
+
+
+def _build_ir_record(name: str, entries: list, prose: dict, category: str) -> dict:
+    """Merge one function's JSON signatures and .m prose into an IR record.
+
+    The JSON is the hard dependency and drives the parameter and output
+    lists; prose only fills in the `*_long` fields and output prose.
+    Missing prose leaves those fields null (docs section 3.4).
+    """
+    prose = prose or {}
+    inputs = _merge_inputs(entries)
+    outputs = _merge_outputs(entries)
+
+    _attach_param_prose(name, inputs, prose.get("params") or {})
+    _attach_output_prose(name, outputs, prose.get("outputs") or [])
+
+    return {
+        "name": name,
+        "category": category,
+        "description_short": entries[0].get("description") if entries else None,
+        "description_long": prose.get("long_desc"),
+        "inputs": inputs,
+        "outputs": outputs,
+        "see_also": prose.get("see_also") or [],
+        "references": prose.get("references") or [],
+        "fsda_url": _FSDA_URL.format(name=name),
+    }
+
+
+def main(args) -> int:
+    """Run the full pipeline and write the IR to `args.output`.
+
+    Enumerate the toolbox, then for every folder that has a
+    functionSignatures.json parse it, cross-check against that folder's
+    Contents.m functions, and extract .m prose only for the functions
+    present in both. Returns a process exit code.
+    """
+    fsda_root = args.fsda_root
+    try:
+        folders = _enumerate_toolbox(fsda_root)
+    except (FileNotFoundError, NotADirectoryError) as exc:
+        log.error("%s", exc)
+        return 1
+
+    records = []
+
+    for folder in folders:
+        functions = folder["functions"]
+        json_path = folder["json_path"]
+
+        # Skip folders that have no JSON file. The IR is driven by the JSON, so
+        # we don't want to include any functions that are only in Contents.m.
+        if json_path is None:
+            log.warning(
+                "%s: no functionSignatures.json, skipping %d function(s)",
+                json_path or fsda_root,
+                len(functions),
+            )
+            continue
+
+        try:
+            signatures = _parse_json_signatures(fsda_root / json_path)
+        except (OSError, ValueError) as exc:
+            log.error("%s: cannot parse signatures: %s", json_path, exc)
+            continue
+
+        for name in sorted(functions):
+            if name not in signatures:
+                log.warning("%s: no JSON entry, skipping", name)
+                continue
+
+            m_path = fsda_root / functions[name]["m_path"]
+
+            if not m_path.is_file():
+                log.warning("%s: .m file not found, skipping", name)
+                continue
+
+            prose = _extract_m_prose(m_path)
+            if prose is None:
+                log.warning("%s: no usable .m prose, JSON only", name)
+
+            records.append(
+                _build_ir_record(
+                    name, signatures[name], prose, functions[name]["category"]
+                )
+            )
+
+    # Write the IR to disk.
+    output = args.output
+
+    # If the user specified a directory, write to IntRep.json inside it.
+    if output.suffix != ".json":
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output = output / "IntRep.json"
+
+    output.write_text(
+        json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
+    return 0
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Parse FSDA metadata into an intermediate representation.",
@@ -456,3 +692,4 @@ if __name__ == "__main__":
         help="Where should the output be written (default: ./IntRep.json)",
     )
     args = parser.parse_args()
+    sys.exit(main(args))
