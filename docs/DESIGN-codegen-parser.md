@@ -202,19 +202,20 @@ Executed once per eligible function.
 
 **Output:** one IR dict (schema in §4).
 
-1. If multiple JSON entries exist for this function, flatten them into one combined parameter list:
+1. Before flattening, check each of the function's signatures separately: if any input declared in a signature has no `type`, log a warning naming the function and the input, and produce no IR record. 
+2. If multiple JSON entries exist for this function, flatten them into one combined parameter list:
    - Parameters with the same name but different types across entries: types are unioned. E.g. a parameter typed as `[["single", "2d"], ["double", "2d"]]` in one entry and `"table"` in another becomes `[["single", "2d"], ["double", "2d"], ["table"]]`.
    - Parameters only in one entry: included as-is. The bridge does not validate parameter combinations.
    - For non-type fields (`kind`, `default`, `purpose`), the first entry's value is used. `description_short` and outputs are also taken from the first entry. Parameter order follows the first entry, with params unique to later entries appended at the end.
-2. Normalize all `matlab_type` values to list-of-lists (OR of AND). E.g. `"struct"` → `[["struct"]]`, `["numeric", "scalar"]` → `[["numeric", "scalar"]]`, `[["single", "scalar"], ["double", "scalar"]]` → unchanged. Also:
+3. Normalize all `matlab_type` values to list-of-lists (OR of AND). E.g. `"struct"` → `[["struct"]]`, `["numeric", "scalar"]` → `[["numeric", "scalar"]]`, `[["single", "scalar"], ["double", "scalar"]]` → unchanged. Also:
    - `struct:Name` type references (e.g. `"struct:TkmeansOpt"`): the atom becomes `"struct"`. The typedef name is discarded. Normalization handles the nesting.
    - `choices=tbl.Properties.VariableNames` entries: kept as-is. These are MATLAB editor hints meaning "accepts column names from the input table." The codegen decides what to do with them; the underlying `cellstr`/`char` entries in the same union already cover the type.
-3. For each input, set `purpose_short` from the JSON `purpose` string. Set `purpose_long` from the `.m` prose if available, null otherwise.
-4. Set `description_short` from JSON `description`, `description_long` from `.m` (null if absent).
-5. For each output, normalize `matlab_type` the same way, then attach `.m` parsed output prose (`short_desc`, `long_desc`, `fields`) where available.
-6. Set `see_also`, `references` from `.m` prose. All null/empty if no `.m`.
-7. Set `category` from the enumerator's per-function entry.
-8. Construct `fsda_url` as `https://rosa.unipr.it/FSDA/{name}.html`.
+4. For each input, set `purpose_short` from the JSON `purpose` string. Set `purpose_long` from the `.m` prose if available, null otherwise.
+5. Set `description_short` from JSON `description`, `description_long` from `.m` (null if absent).
+6. For each output, normalize `matlab_type` the same way (null if the JSON gives no type), then attach `.m` parsed output prose (`short_desc`, `long_desc`, `fields`) where available.
+7. Set `see_also`, `references` from `.m` prose. All null/empty if no `.m`.
+8. Set `category` from the enumerator's per-function entry.
+9. Construct `fsda_url` as `https://rosa.unipr.it/FSDA/{name}.html`.
 
 **Mismatches between sources:**
 
@@ -222,7 +223,7 @@ Executed once per eligible function.
 - **Parameter in JSON but not in `.m`:** warning. Shouldn't happen if the function passed publishFS. The JSON `purpose` string is used.
 - **Output names in `.m` function line disagree with JSON `outputs`:** warning. The JSON drives the output list; `.m` prose attaches by matching names.
 
-The merge never invents information. If both sources are silent on a field, it stays null.
+The merge never invents information. If both sources are silent on a field, it stays null (except for input types).
 
 ## 4. IR schema
 
@@ -306,7 +307,7 @@ When a function has multiple JSON entries (mutually exclusive calling convention
 }
 ```
 
-Types stay in MATLAB terms (`matlab_type`) and are always normalized to list-of-lists (OR of AND). Mapping to target language types is a codegen concern, not an IR concern.
+Types stay in MATLAB terms (`matlab_type`) and are always normalized to list-of-lists (OR of AND), except for outputs the JSON gives no type, which are null. Mapping to target language types is a codegen concern, not an IR concern.
 
 When an input has `"type": "struct:TkmeansOpt"` in the JSON, the IR stores it as `"struct"`. The typedef reference is stripped; the pipeline does not resolve it.
 
@@ -322,6 +323,7 @@ After a run, verify that:
 - A function with JSON but unparseable `.m` produces a sparse but valid IR record.
 - A function with `.m` but no JSON produces no IR record (and a warning).
 - A function in JSON but absent from that folder's `Contents.m` produces a warning and no IR record.
+- A function with an untyped input argument produces no record and a warning.
 - Parameters originally typed as `struct:Name` in the JSON appear as `[["struct"]]` in the IR.
 - Duplicate JSON keys (e.g. `MixSim`) produce a single IR record with merged parameters, not separate records.
 
@@ -354,3 +356,5 @@ The IR can be written to disk as JSON for inspection and for consumption by futu
 **Why not build codegen now.** Infrastructure first. The IR schema needs to be correct and stable before anything consumes it. Codegen is Phase 2.
 
 **Why flatten mutually exclusive JSON signatures.** MATLAB uses duplicate keys to drive context-sensitive autocompletion in its editor. The bridge languages cannot replicate this: the facades pass arguments through opaquely. Flattening into one parameter list with unioned types preserves all type information without schema complexity that nothing downstream can use. MATLAB-specific type hints like `choices=tbl.Properties.VariableNames` are kept in the IR for the codegen to interpret or skip.
+
+**Why an untyped input drops the whole function.** Input types end up in the generated signatures of the bridge languages, so an input without a type leaves the signature incomplete, which is worse than no record (see "Why JSON is mandatory"). The check runs per signature, before flattening, because once types are unioned a typed signature can hide an untyped one. Outputs are exempt: JSON outputs are optional in FSDA, and their types serve documentation rather than signatures, so an untyped output gets `matlab_type: null`.
