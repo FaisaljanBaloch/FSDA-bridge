@@ -1,4 +1,4 @@
-"""Parse FSDA toolbox metadata into an intermediate representation.
+﻿"""Parse FSDA toolbox metadata into an intermediate representation.
 
 See docs/DESIGN-codegen-parser.md for the full specification.
 Specs 022, 023, 024 define the individual components.
@@ -453,17 +453,17 @@ def _normalize_matlab_type(value) -> list:
     `struct`; the typedef is not resolved here. `choices=...` hints are
     kept verbatim for codegen to interpret later.
     """
+
+    def clean(atom: str) -> str:
+        return "struct" if atom.startswith("struct:") else atom
+
     atoms = value if isinstance(value, list) else [value]
-    normalized = []
-    for atom in atoms:
-        parts = atom if isinstance(atom, list) else [atom]
-        cleaned = [
-            str(part).split(":", 1)[0] if str(part).startswith("struct:") else str(part)
-            for part in parts
-        ]
-        if cleaned and cleaned not in normalized:
-            normalized.append(cleaned)
-    return normalized
+    is_list = [isinstance(a, list) for a in atoms]
+
+    if all(is_list):
+        return [[clean(s) for s in sublist] for sublist in atoms]
+
+    return [[clean(atom) for atom in atoms]]
 
 
 def _union_types(first: list, second: list) -> list:
@@ -507,6 +507,23 @@ def _merge_inputs(entries: list) -> list:
     return [by_name[name] for name in order]
 
 
+def _validate_input_types(name: str, entries: list) -> bool:
+    """Reject a function if any individual signature has an untyped input."""
+    valid = True
+    for signature_index, entry in enumerate(entries, start=1):
+        for param in entry.get("inputs") or []:
+            if "type" not in param or param.get("type") is None:
+                input_name = param.get("name", "<unnamed>")
+                log.warning(
+                    "%s: input %s has no type in signature %d; skipping function",
+                    name,
+                    input_name,
+                    signature_index,
+                )
+                valid = False
+    return valid
+
+
 def _merge_outputs(entries: list) -> list:
     """Take outputs from the first entry, normalizing each `matlab_type`."""
     if not entries:
@@ -514,7 +531,11 @@ def _merge_outputs(entries: list) -> list:
     return [
         {
             "name": output.get("name"),
-            "matlab_type": _normalize_matlab_type(output.get("type")),
+            "matlab_type": (
+                None
+                if "type" not in output or output.get("type") is None
+                else _normalize_matlab_type(output["type"])
+            ),
             "short_desc": None,
             "long_desc": None,
             "fields": [],
@@ -575,7 +596,9 @@ def _attach_output_prose(name: str, outputs: list, prose_output_list: list) -> N
     )
 
 
-def _build_ir_record(name: str, entries: list, prose: dict, category: str) -> dict:
+def _build_ir_record(
+    name: str, entries: list, prose: dict, category: str
+) -> dict | None:
     """Merge one function's JSON signatures and .m prose into an IR record.
 
     The JSON is the hard dependency and drives the parameter and output
@@ -583,6 +606,9 @@ def _build_ir_record(name: str, entries: list, prose: dict, category: str) -> di
     Missing prose leaves those fields null (docs section 3.4).
     """
     prose = prose or {}
+    if not _validate_input_types(name, entries):
+        return None
+
     inputs = _merge_inputs(entries)
     outputs = _merge_outputs(entries)
 
@@ -654,20 +680,20 @@ def main(args) -> int:
             if prose is None:
                 log.warning("%s: no usable .m prose, JSON only", name)
 
-            records.append(
-                _build_ir_record(
-                    name, signatures[name], prose, functions[name]["category"]
-                )
+            record = _build_ir_record(
+                name, signatures[name], prose, functions[name]["category"]
             )
+            if record is not None:
+                records.append(record)
 
     # Write the IR to disk.
     output = args.output
 
     # If the user specified a directory, write to IntRep.json inside it.
     if output.suffix != ".json":
-        output.parent.mkdir(parents=True, exist_ok=True)
         output = output / "IntRep.json"
 
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8"
     )
