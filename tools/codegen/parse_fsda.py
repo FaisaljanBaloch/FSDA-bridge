@@ -364,26 +364,24 @@ def _extract_references(lines: list, bounds: dict) -> list:
 
 def _split_output_fields(output_name: str, fragments: list, field_re) -> dict:
     """Like `_parse_named_blocks`, but a repeated field name continues the
-    existing field (with a warning) instead of restarting it.
+    current field (with a warning) instead of restarting it.
     """
     blocks = {}
     current = None
     for raw in fragments:
         match = field_re.match(raw)
-        if match:
+        if match and match.group(1) not in blocks:
             current = match.group(1)
             first = match.group(2).strip()
-            if current in blocks:
+            blocks[current] = [first] if first else []
+        elif current is not None:
+            # Any other line belongs to the current field includign repetitions
+            if match:
                 log.warning(
                     "field %s repeats in output %s; treating as continuation",
-                    current,
+                    match.group(1),
                     output_name,
                 )
-                if first:
-                    blocks[current].append(first)
-            else:
-                blocks[current] = [first] if first else []
-        elif current is not None:
             stripped = raw.strip()
             if stripped:
                 blocks[current].append(stripped)
