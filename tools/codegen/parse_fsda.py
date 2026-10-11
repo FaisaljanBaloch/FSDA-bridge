@@ -159,9 +159,7 @@ def _isolate_preamble(m_path: Path) -> tuple[str, list[str]] | None:
 
     lines = text.splitlines()
     if not lines or not lines[0].lstrip().startswith("function"):
-        log.warning(
-            f"_extract_m_prose: {m_path} does not start with a 'function' line"
-        )
+        log.warning(f"_extract_m_prose: {m_path} does not start with a 'function' line")
         return None
 
     end_idx = next(
@@ -322,6 +320,119 @@ def _extract_params(lines: list, bounds: dict) -> dict:
     return params
 
 
+def _extract_see_also(lines: list, bounds: dict) -> list:
+    """Comma-separated function names. The list lives on the header's own
+    line (`See also: tkmeans, tclustIC, tclusteda`), not a separate body
+    line, so this reads the header line directly rather than `_section_lines`.
+    """
+    if "see_also" not in bounds:
+        return []
+    header_line = lines[bounds["see_also"]]
+    match = re.search(r"See\s+also\s*:?\s*(.*)", header_line, re.IGNORECASE)
+    if not match:
+        return []
+    return [item.strip() for item in match.group(1).split(",") if item.strip()]
+
+
+def _extract_references(lines: list, bounds: dict) -> list:
+    if "references" not in bounds:
+        return []
+    reference_lines = _section_lines(lines, bounds, "references")
+    copyright_idx = next(
+        (
+            i
+            for i, line in enumerate(reference_lines)
+            if line.strip().lower().startswith("copyright")
+        ),
+        len(reference_lines),
+    )
+    reference_lines = reference_lines[:copyright_idx]
+
+    references = []
+    current = []
+    for line in reference_lines:
+        stripped = line.strip()
+        if stripped:
+            current.append(stripped)
+        elif current:
+            references.append(_join_block(current))
+            current = []
+    if current:
+        references.append(_join_block(current))
+    return references
+
+
+def _split_output_fields(output_name: str, fragments: list, field_re) -> dict:
+    """Like `_parse_named_blocks`, but a repeated field name continues the
+    existing field (with a warning) instead of restarting it.
+    """
+    blocks = {}
+    current = None
+    for raw in fragments:
+        match = field_re.match(raw)
+        if match:
+            current = match.group(1)
+            first = match.group(2).strip()
+            if current in blocks:
+                log.warning(
+                    "field %s repeats in output %s; treating as continuation",
+                    current,
+                    output_name,
+                )
+                if first:
+                    blocks[current].append(first)
+            else:
+                blocks[current] = [first] if first else []
+        elif current is not None:
+            stripped = raw.strip()
+            if stripped:
+                blocks[current].append(stripped)
+    return blocks
+
+
+def _build_output_entry(name: str, fragments: list) -> dict:
+    field_re = re.compile(rf"^\s*{re.escape(name)}\.(\w+)\s*=\s*(.*)$")
+    field_blocks = _split_output_fields(name, fragments, field_re)
+    fields = [
+        {"name": field_name, "desc": _join_block(field_fragments)}
+        for field_name, field_fragments in field_blocks.items()
+    ]
+
+    if fields:
+        first_field_idx = next(
+            i for i, line in enumerate(fragments) if field_re.match(line)
+        )
+        prose_fragments = fragments[:first_field_idx]
+    else:
+        prose_fragments = fragments
+    long_desc = _join_block(prose_fragments)
+    split = long_desc.find(". ")
+    short_desc = long_desc[: split + 1] if split != -1 else long_desc
+
+    return {
+        "name": name,
+        "short_desc": short_desc,
+        "long_desc": long_desc,
+        "fields": fields,
+    }
+
+
+def _extract_outputs(lines: list, bounds: dict, has_varargout: bool) -> list:
+    outputs = []
+    output_blocks = _parse_named_blocks(_section_lines(lines, bounds, "output"))
+    for name, fragments in output_blocks.items():
+        outputs.append(_build_output_entry(name, fragments))
+
+    if has_varargout:
+        optional_blocks = _parse_named_blocks(
+            _section_lines(lines, bounds, "optional_output")
+        )
+        for name, fragments in optional_blocks.items():
+            outputs.append(_build_output_entry(name, fragments))
+
+    return outputs
+
+
 def _extract_m_prose(m_path: Path) -> dict | None:
     """Extract prose from a single .m file's preamble.
 
@@ -337,99 +448,11 @@ def _extract_m_prose(m_path: Path) -> dict | None:
     bounds = _find_section_bounds(preamble)
     long_desc = _extract_long_desc(preamble, bounds)
     params = _extract_params(preamble, bounds)
-    outputs = []
+    outputs = _extract_outputs(preamble, bounds, has_varargout)
 
-    output_blocks = _parse_named_blocks(_section_lines(preamble, bounds, "output"))
+    see_also = _extract_see_also(preamble, bounds)
 
-    for name, fragments in output_blocks.items():
-        first_line = fragments[0] if fragments else ""
-        dot = first_line.find(".")
-        short_desc = (first_line[: dot + 1] if dot != -1 else first_line).strip()
-        fields = []
-
-        if "structure" in short_desc.lower() and "field" in short_desc.lower():
-            field_re = re.compile(rf"^\s*{re.escape(name)}\.(\w+)\s*=\s*(.*)$")
-            field_blocks = _parse_named_blocks(
-                fragments, pattern=field_re, exclude=frozenset()
-            )
-            for field_name, field_fragments in field_blocks.items():
-                fields.append(
-                    {
-                        "name": field_name,
-                        "desc": _join_block(field_fragments),
-                    }
-                )
-            output_long_desc = short_desc
-        else:
-            output_long_desc = _join_block(fragments)
-
-        outputs.append(
-            {
-                "name": name,
-                "short_desc": short_desc,
-                "long_desc": output_long_desc,
-                "fields": fields,
-            }
-        )
-
-    if has_varargout:
-        optional_blocks = _parse_named_blocks(
-            _section_lines(preamble, bounds, "optional_output")
-        )
-
-        for name, fragments in optional_blocks.items():
-            description = _join_block(fragments)
-            outputs.append(
-                {
-                    "name": name,
-                    "short_desc": description,
-                    "long_desc": description,
-                    "fields": [],
-                }
-            )
-
-    see_also = []
-    if "see_also" in bounds:
-        header_line = preamble[bounds["see_also"]]
-        match = re.search(
-            r"See\s+also\s*:?\s*(.*)",
-            header_line,
-            re.IGNORECASE,
-        )
-        if match:
-            see_also = [
-                item.strip() for item in match.group(1).split(",") if item.strip()
-            ]
-
-    references = []
-    if "references" in bounds:
-        reference_lines = _section_lines(preamble, bounds, "references")
-        # Everything from "Copyright <year>" onward is trailing boilerplate
-        # (Written by FSDA team, the repeated docsearchFS link, the
-        # $LastChangedDate$ stamp) with no header of its own - cut there.
-        copyright_idx = next(
-            (
-                i
-                for i, line in enumerate(reference_lines)
-                if line.strip().lower().startswith("copyright")
-            ),
-            len(reference_lines),
-        )
-        reference_lines = reference_lines[:copyright_idx]
-
-        # Citations are separated by blank lines in the source and often
-        # wrap across several lines - join each citation's lines into one
-        # entry instead of emitting one list item per physical line.
-        current = []
-        for line in reference_lines:
-            stripped = line.strip()
-            if stripped:
-                current.append(stripped)
-            elif current:
-                references.append(_join_block(current))
-                current = []
-        if current:
-            references.append(_join_block(current))
+    references = _extract_references(preamble, bounds)
 
     return {
         "long_desc": long_desc,
