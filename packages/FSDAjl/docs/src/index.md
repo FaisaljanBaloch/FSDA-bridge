@@ -1,15 +1,26 @@
-# FSDAjl
+# FSDA.jl
 
-FSDAjl lets you call the MATLAB [FSDA toolbox](https://github.com/UniprJRC/FSDA)
-from Julia. It does not reimplement the statistics: it starts MATLAB in the
-background, passes your data to FSDA, and returns the results as ordinary Julia
-arrays.
+FSDA.jl lets you call the MATLAB [FSDA toolbox](https://github.com/UniprJRC/FSDA) from Julia through a thin wrapper over [FSDA-bridge](https://github.com/UniprJRC/FSDA-bridge)'s generic Python engine.
+
+FSDA itself runs inside MATLAB at call time. FSDA.jl does not reimplement the statistical routines; it passes data to FSDA and returns the results as Julia values.
 
 ## Requirements
 
-- MATLAB, with the FSDA Add-On installed
-- A working MATLAB licence
-- Python with the matlabengine package, and `JULIA_CONDAPKG_BACKEND` set to `Null`
+Before installing, make sure you have:
+
+- MATLAB installed and licensed, with the FSDA Add-On installed and available on the MATLAB path.
+- A Python environment with `numpy` and a `matlabengine` release matching your MATLAB version (for example, `matlabengine==26.1.*` for MATLAB R2026a).
+- Julia with the package dependencies available.
+
+**FSDA.jl can be installed without MATLAB**, for example in CI, but calls into FSDA will fail until MATLAB, FSDA, and the matching MATLAB Engine API for Python are configured.
+
+## Install matrix
+
+| MATLAB release | Required `matlabengine` |
+| -------------- | ----------------------- |
+| R2026a         | `matlabengine==26.1.*`  |
+
+Match `matlabengine` to your installed MATLAB release; do not assume the example version applies to every MATLAB release.
 
 ## Installation
 
@@ -18,10 +29,21 @@ using Pkg
 Pkg.add("FSDA")
 ```
 
+## Configure PythonCall
+
+FSDA.jl uses [PythonCall.jl](https://github.com/JuliaPy/PythonCall.jl) to call the existing Python environment. Configure PythonCall to use the virtual environment above instead of provisioning its own Python through Conda: Conda cannot install MATLAB's `matlabengine` package.
+
+```bash
+export JULIA_CONDAPKG_BACKEND=Null
+export FSDA_DEV_VENV=/path/to/your/venv/bin/python
+export JULIA_PYTHONCALL_EXE=/path/to/your/venv/bin/python
+```
+
+Set these **before** starting Julia / loading the package. FSDA.jl checks `JULIA_CONDAPKG_BACKEND` at load time and will warn loudly if it isn't set to `"Null"`.
+
 ## A first call
 
-The engine starts by itself on the first call, so there is no setup step. Call
-`stop_engine()` when you are finished to shut MATLAB down.
+The first call starts the MATLAB engine automatically. Call `stop_engine()` when you are finished to shut it down.
 
 ```julia
 using FSDA
@@ -36,6 +58,25 @@ Y = [ 0.52 -1.10;  1.83  0.14; -0.09  1.53;  0.32 -0.77;  1.10  0.37;
 d = mahalFS(Y, μ, Σ)
 
 stop_engine()
+```
+
+## Quick start: explicit engine
+
+You can also manage the MATLAB engine explicitly and reuse it across calls:
+
+```julia
+using FSDA
+using Statistics
+
+h = FSDA.start_engine()
+
+Y = randn(10, 2)
+MU = median(Y, dims = 1)
+SIGMA = [0.3 0.4; 0.4 1.0]
+
+d = FSDA.call(h, "mahalFS", Y, MU, SIGMA)
+
+FSDA.stop_engine(h)
 ```
 
 ## Reaching MATLAB directly
@@ -54,3 +95,7 @@ call("rng", 1234, nargout = 0)
 Every function has a page of its own, listed in the sidebar. Each gives the
 input arguments, a worked example with its output, and links to the
 corresponding page of the FSDA documentation.
+
+## License
+
+[EUPL-1.2](LICENSE), consistent with FSDA's own licensing.
