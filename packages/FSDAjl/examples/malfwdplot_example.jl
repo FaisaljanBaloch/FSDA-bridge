@@ -7,9 +7,9 @@
 # malfwdplot draws nothing back to Julia; it is called for the plot. Note that
 # the whole struct is passed straight through, which the bridge handles.
 #
-# Full documentation: the malfwdplot page in the FSDAjl docs.
+# Full documentation: the malfwdplot page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

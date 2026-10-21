@@ -8,9 +8,9 @@
 #   la    candidate transformation parameters to test
 #   out   Dict with keys "Score" (statistic per lambda) and "Lik"
 #
-# Full documentation: the Score page in the FSDAjl docs.
+# Full documentation: the Score page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

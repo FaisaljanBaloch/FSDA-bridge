@@ -34,7 +34,7 @@ option to silence it.
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

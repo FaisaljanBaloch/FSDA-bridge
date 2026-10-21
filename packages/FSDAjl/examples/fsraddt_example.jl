@@ -8,9 +8,9 @@
 #   out   Dict; "Tdel" is steps x (1 + p-1), the subset size followed by one
 #         deletion t statistic per predictor
 #
-# Full documentation: the FSRaddt page in the FSDAjl docs.
+# Full documentation: the FSRaddt page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

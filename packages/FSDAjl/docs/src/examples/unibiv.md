@@ -28,7 +28,7 @@ Optional, passed as name-value keywords:
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Printf
 
 Y = eval_expr("table2array(getfield(load('swiss_banknotes.mat'),'swiss_banknotes'))")

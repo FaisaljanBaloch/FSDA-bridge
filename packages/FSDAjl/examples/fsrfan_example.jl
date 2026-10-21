@@ -7,9 +7,9 @@
 #   out  Dict; "Score" is steps x (1 + number of lambdas), the subset size
 #        followed by the score statistic for each candidate lambda
 #
-# Full documentation: the FSRfan page in the FSDAjl docs.
+# Full documentation: the FSRfan page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

@@ -1,10 +1,10 @@
 using Documenter
-using FSDA
+using FSDABridge
 
 makedocs(
-    sitename = "FSDAjl",
-    authors  = "Group 3",
-    modules  = [FSDA],
+    sitename = "FSDABridge.jl",
+    authors  = "UniprJRC",
+    modules  = [FSDABridge],
     warnonly = true,
     format   = Documenter.HTML(prettyurls = false),
     pages = [

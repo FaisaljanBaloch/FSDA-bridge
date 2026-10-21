@@ -33,7 +33,7 @@ Optional, passed as name-value keywords:
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

@@ -7,9 +7,9 @@
 #        from the clean units only, "mmd" the minimum Mahalanobis distance
 #        at each step of the search
 #
-# Full documentation: the FSM page in the FSDAjl docs.
+# Full documentation: the FSM page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

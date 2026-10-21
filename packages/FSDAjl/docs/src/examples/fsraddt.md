@@ -32,7 +32,7 @@ Use `D[:, 4:4]` rather than `D[:, 4]`, so the response stays two dimensional.
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Printf
 
 D = eval_expr("table2array(getfield(load('multiple_regression.mat'),'multiple_regression'))")

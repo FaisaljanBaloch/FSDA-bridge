@@ -7,9 +7,9 @@
 #        "md" the distance of each unit from that centre, "outliers" the
 #        units judged too far away
 #
-# Full documentation: the mcd page in the FSDAjl docs.
+# Full documentation: the mcd page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

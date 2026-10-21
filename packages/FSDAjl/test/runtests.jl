@@ -1,6 +1,6 @@
-using FSDA
+using FSDABridge
 using Test
 
-@testset "FSDA.jl" begin
+@testset "FSDABridge.jl" begin
     # Write your tests here.
 end

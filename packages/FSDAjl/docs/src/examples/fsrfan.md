@@ -34,7 +34,7 @@ returns the statistics and nothing is plotted here.
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Printf
 
 W = eval_expr("table2array(getfield(load('wool.mat'),'wool'))")

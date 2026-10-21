@@ -8,9 +8,9 @@
 #
 # This example opens a plot window. Close it to let the script finish.
 #
-# Full documentation: the boxplotb page in the FSDAjl docs.
+# Full documentation: the boxplotb page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

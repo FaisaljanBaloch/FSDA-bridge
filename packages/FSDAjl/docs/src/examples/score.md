@@ -32,7 +32,7 @@ The response must stay two dimensional, so use `W[:, 4:4]` rather than `W[:, 4]`
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Printf
 
 # wool ships with FSDA, so it is loaded through MATLAB.

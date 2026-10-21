@@ -28,7 +28,7 @@ are `MU` and `SIGMA` in the FSDA MATLAB documentation.
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Statistics
 
 Y = [ 0.52 -1.10;  1.83  0.14; -0.09  1.53;  0.32 -0.77;  1.10  0.37;

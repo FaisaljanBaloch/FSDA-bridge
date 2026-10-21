@@ -7,9 +7,9 @@
 #   out  Dict; "beta" the final coefficients, "Sbeta" the initial S estimate
 #        they were refined from, "outliers" the units flagged
 #
-# Full documentation: the MMreg page in the FSDAjl docs.
+# Full documentation: the MMreg page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

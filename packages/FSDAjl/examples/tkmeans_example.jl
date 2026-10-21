@@ -8,9 +8,9 @@
 #   out    Dict; "idx" is the cluster label per unit, where 0 means the unit
 #          was trimmed, and "muopt" is k x v, one centroid per row
 #
-# Full documentation: the tkmeans page in the FSDAjl docs.
+# Full documentation: the tkmeans page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

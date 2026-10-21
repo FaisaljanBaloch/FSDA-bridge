@@ -32,7 +32,7 @@ Without `msg = 0` this prints a long block of signal detection diagnostics.
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

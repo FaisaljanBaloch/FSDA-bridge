@@ -7,9 +7,9 @@
 #   Σ  v x v covariance matrix   (SIGMA in the FSDA documentation)
 #   d  n x 1 squared distances, in the row order of Y
 #
-# Full documentation: the mahalFS page in the FSDAjl docs.
+# Full documentation: the mahalFS page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Statistics
 
 

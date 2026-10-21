@@ -11,9 +11,9 @@
 #          "beta"      estimated regression coefficients
 #          "mdr"       minimum deletion residual at each step
 #
-# Full documentation: the FSR page in the FSDAjl docs.
+# Full documentation: the FSR page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

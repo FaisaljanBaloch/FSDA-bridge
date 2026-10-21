@@ -7,9 +7,9 @@
 #   out  Dict; "beta" the coefficients, "residuals" one per unit,
 #        "outliers" the units flagged, "scale" the robust spread estimate
 #
-# Full documentation: the LXS page in the FSDAjl docs.
+# Full documentation: the LXS page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

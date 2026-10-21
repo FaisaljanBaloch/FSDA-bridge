@@ -9,9 +9,9 @@
 #          column 3  how often it fell outside a two-variable ellipse
 #          column 4  a pseudo Mahalanobis distance, its overall score
 #
-# Full documentation: the unibiv page in the FSDAjl docs.
+# Full documentation: the unibiv page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

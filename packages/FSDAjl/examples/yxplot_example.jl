@@ -10,9 +10,9 @@
 # yXplot returns nothing. It is called for the plot it draws, so nargout = 0
 # tells the bridge not to ask for a return value.
 #
-# Full documentation: the yXplot page in the FSDAjl docs.
+# Full documentation: the yXplot page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

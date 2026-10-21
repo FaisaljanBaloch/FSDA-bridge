@@ -35,7 +35,7 @@ to MATLAB as a row, and FSR expects an `n x 1` column.
 ## Example
 
 ```julia
-using FSDA
+using FSDABridge
 using Random
 using Printf
 

@@ -8,9 +8,9 @@
 #        Mahalanobis distance at that step, and "MAL" is n x steps, the
 #        distance of every unit at every step
 #
-# Full documentation: the FSMeda page in the FSDAjl docs.
+# Full documentation: the FSMeda page in the FSDABridge docs.
 
-using FSDA
+using FSDABridge
 using Printf
 
 

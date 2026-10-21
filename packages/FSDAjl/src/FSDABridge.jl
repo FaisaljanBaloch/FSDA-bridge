@@ -1,4 +1,4 @@
-module FSDA
+module FSDABridge
 
 const _ENGINE_DIR = joinpath(@__DIR__, "engines") # absolute path to the engine directory
 
