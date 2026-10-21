@@ -12,7 +12,9 @@ Before installing, make sure you have:
 - A Python environment with `numpy` and a `matlabengine` release matching your MATLAB version (for example, `matlabengine==26.1.*` for MATLAB R2026a).
 - Julia with the package dependencies available.
 
-**FSDABridge.jl can be installed without MATLAB**, for example in CI, but calls into FSDA will fail until MATLAB, FSDA, and the matching MATLAB Engine API for Python are configured.
+**FSDABridge.jl can be installed without MATLAB**, but calls into FSDA will fail until MATLAB, FSDA, and the matching MATLAB Engine API for Python are configured.
+
+MATLAB and the MATLAB Engine API for Python are proprietary MathWorks software and are not distributed with this package; see [THIRD_PARTY_NOTICE.md](THIRD_PARTY_NOTICE.md).
 
 ## Install matrix
 
