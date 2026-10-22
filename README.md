@@ -1,17 +1,28 @@
-# FSDA-bridge — call FSDA from Python (and Julia · R)
+# FSDA-bridge
 
-Call routines from **[FSDA](https://github.com/UniprJRC/FSDA)** (a MATLAB robust-statistics toolbox)
-from **Python**, keeping the original MATLAB FSDA code as the unmodified computational backend. This
-repo holds two things:
+Use the [FSDA](https://github.com/UniprJRC/FSDA) robust-statistics toolbox for MATLAB
+from Python, Julia and R. FSDA's routines run in MATLAB: each package passes data to
+MATLAB through its Engine API for Python and returns the results as native values.
 
-- **`pyfsda`** (`packages/pyfsda/`) — an **installable Python package**: `import pyfsda` and call any
-  FSDA routine as `pyfsda.Score(y, X, ...)`. It has its own build, tests, examples, and CI, and is
-  published to PyPI. **Start here if you just want to use FSDA from Python.**
-- **The research prototype** (`code/`, `specs/`) it was distilled from — a spec-driven study of the
-  Python↔MATLAB bridge, including thin **Julia** (PythonCall) and **R** (reticulate) surfaces over the
-  same engine. This is **no build / no CI** by design (see §1–10 below for the internals). Work here is
-  spec-driven: `CONSTITUTION.md` fixes the rules, `AGENTS.md` says how to contribute, one file per task
-  under `specs/`.
+Every package needs MATLAB with the FSDA Add-On, and a Python environment with the
+`matlabengine` release that matches your MATLAB (e.g. `matlabengine==26.1.*` for
+R2026a).
+
+## Packages
+
+| Language | Package | Folder | Install |
+|---|---|---|---|
+| Python | `pyfsda` | [`packages/pyfsda`](packages/pyfsda/) | `pip install pyfsda` |
+| Julia | `FSDABridge` | [`packages/FSDAjl`](packages/FSDAjl/) | `using Pkg; Pkg.add("FSDABridge")` |
+| R | `fsdabridge` | in development | — |
+
+Each package's README covers setup and a first example.
+
+## The rest of the repository
+
+- `code/` and `specs/`: the research prototype the packages were built from.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md), `CONSTITUTION.md`, `AGENTS.md`: how to work in
+  this repo.
 
 ---
 
