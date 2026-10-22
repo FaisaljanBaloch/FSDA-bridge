@@ -158,11 +158,22 @@ end
 
 # --- Lifecycle ---------------------------------------------------------------
 """
-    start_engine(; routine=nothing, python=ENV["FSDA_DEV_VENV"], fsda_root=nothing)
+    start_engine(; fsda_root = nothing, routine = nothing)
 
-Import the shared Python `engine` and start a reusable MATLAB engine session, returning
-an opaque `FsdaEngineHandle`. PythonCall is already bound to the interpreter resolved at
-load time.
+Start a MATLAB session with FSDA and return a handle to it, for use with
+`call(handle, name, ...)`, `eval_expr(handle, expr)`, [`diagnostics`](@ref) and
+`stop_engine(handle)`.
+
+This session is separate from the one the routine functions start automatically:
+`stop_engine()` does not stop it, and `call(name, ...)` does not use it.
+
+# Keywords
+- `fsda_root`: FSDA's install folder, needed only if FSDA is not installed as a
+  MATLAB Add-On.
+- `routine`: an FSDA function name to look up at start; if MATLAB cannot find it,
+  the session is closed and an error is raised.
+
+On start, a notice is printed if a newer FSDA release is available.
 """
 function start_engine(; routine = nothing,
                        python::AbstractString = get(ENV, "FSDA_DEV_VENV", ""),
@@ -188,14 +199,14 @@ function start_engine(; routine = nothing,
     return FsdaEngineHandle(module_, engine, _PYTHON_EXE, _ENGINE_DIR)
 end
 
+# Arguments and return values are documented on call(name, ...) in FSDABridge.jl;
+# update that docstring if this method's behaviour changes.
 """
-    call(handle, name, args...; nargout=1, echo_output=false, options=nothing, kwargs...)
+    call(handle, name, args...; kwargs...)
 
-Routine-agnostic call: positional `args` -> MATLAB positionals (in order), `kwargs` ->
-MATLAB name/value pairs. e.g. `call(h, "mahalFS", Y, MU, SIGMA)` or
-`call(h, "Score", y, X; la=la, intercept=true)`. Pass `y` as an (n, 1) matrix when a
-routine wants a column. Arbitrary nested dict / array / table results are converted to
-Julia by `_py2jl`.
+Same as `call(name, ...)`, but runs in the session `handle` returned by
+[`start_engine`](@ref).
+Arguments, keywords and return values are as documented there.
 """
 function call(handle, name, args...; nargout::Integer = 1, echo_output::Bool = false,
               options = nothing, kwargs...)
@@ -209,10 +220,13 @@ function call(handle, name, args...; nargout::Integer = 1, echo_output::Bool = f
     return _py2jl(res)
 end
 
+# Arguments and return values are documented on eval_expr(expr) in FSDABridge.jl;
+# update that docstring if this method's behaviour changes.
 """
-    eval_expr(handle, expr; nargout=1)
+    eval_expr(handle, expr; nargout = 1)
 
-Evaluate a MATLAB expression through the engine (table/timetable aware).
+Same as `eval_expr(expr)`, but runs in the session `handle` returned by
+[`start_engine`](@ref).
 """
 function eval_expr(handle, expr; nargout::Integer = 1)
     _validate_handle(handle)
@@ -227,7 +241,9 @@ stop_engine(handle) = (_validate_handle(handle); handle.engine.stop(); nothing)
 """
     diagnostics(handle) -> NamedTuple
 
-Julia / PythonCall / Python / MATLAB / matlabengine details.
+Report the versions in use for the session `handle` returned by
+[`start_engine`](@ref): Julia, PythonCall, the Python interpreter and its version,
+MATLAB, and `matlabengine`. Useful when reporting a problem.
 """
 function diagnostics(handle)
     _validate_handle(handle)
