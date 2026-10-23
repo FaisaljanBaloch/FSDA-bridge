@@ -128,6 +128,24 @@ wait_for_figures() = wait_for_figures(_engine())
 # Re-export the mandatory API
 export start_engine, call, eval_expr, render_figures, wait_for_figures, diagnostics, stop_engine
 
+struct _Unset end
+const _UNSET = _Unset()
+
+function _set_only(values::NamedTuple)
+    names = Symbol[]
+    kept = Any[]
+    for name in keys(values)
+        value = getfield(values, name)
+        if value !== _UNSET
+            push!(names, name)
+            push!(kept, value)
+        end
+    end
+    return NamedTuple{Tuple(names)}(Tuple(kept))
+end
+
+include(joinpath(@__DIR__, "generated", "routines.jl"))
+
 const FSDA_ROUTINES = [
     :mahalFS,
     :Score,
@@ -148,24 +166,25 @@ const FSDA_ROUTINES = [
     :boxplotb
 ]
 
-# Generate the facade functions dynamically at compile time
+# Keep the variadic facade for routines that are not covered by IntRep.json.
 
 for routine in FSDA_ROUTINES
-    name = string(routine)
-    doc = """
-            $name(args...; kwargs...)
+    if !(routine in _GENERATED_ROUTINES)
+        name = string(routine)
+        doc = """
+                $name(args...; kwargs...)
 
-        Call the FSDA routine `$name`; the same as `call("$name", args...; kwargs...)`.
-        Arguments and name-value options are those of the MATLAB function, documented
-        at https://rosa.unipr.it/FSDA/$name.html
-        """
-    @eval begin
-        @doc $doc function $routine(args...; kwargs...)
-            return call(_engine(), $name, args...; kwargs...)
+            Call the FSDA routine `$name`; the same as `call("$name", args...; kwargs...)`.
+            Arguments and name-value options are those of the MATLAB function, documented
+            at https://rosa.unipr.it/FSDA/$name.html
+            """
+        @eval begin
+            @doc $doc function $routine(args...; kwargs...)
+                return call(_engine(), $name, args...; kwargs...)
+            end
+            export $routine
         end
-        export $routine
     end
 end
 
 end
-
