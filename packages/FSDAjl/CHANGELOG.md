@@ -2,7 +2,7 @@
 
 All notable changes to `FSDABridge` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - unreleased
+## [0.1.0] - 2026-10-23
 
 First release. FSDABridge.jl calls routines of the MATLAB FSDA toolbox from Julia,
 through PythonCall and MATLAB’s Engine API for Python.
@@ -25,3 +25,4 @@ through PythonCall and MATLAB’s Engine API for Python.
   matlabengine versions in use.
 - Documentation with examples for 13 FSDA routines, and 16 example scripts in `examples/`.
 
+[0.1.0]: https://github.com/UniprJRC/FSDA-bridge/releases/tag/FSDABridge-v0.1.0
