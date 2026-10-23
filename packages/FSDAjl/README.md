@@ -10,7 +10,7 @@ Before installing, make sure you have:
 
 - MATLAB installed and licensed, with the FSDA Add-On installed and available on the MATLAB path.
 - A Python environment with `numpy` and a `matlabengine` release matching your MATLAB version (for example, `matlabengine==26.1.*` for MATLAB R2026a).
-- Julia with the package dependencies available.
+- Julia 1.10 or later.
 
 **FSDABridge.jl can be installed without MATLAB**, but calls into FSDA will fail until MATLAB, FSDA, and the matching MATLAB Engine API for Python are configured.
 
@@ -70,15 +70,15 @@ You can also manage the MATLAB engine explicitly and reuse it across calls:
 using FSDABridge
 using Statistics
 
-h = FSDABridge.start_engine()
+h = start_engine()
 
 Y = randn(10, 2)
 MU = median(Y, dims = 1)
 SIGMA = [0.3 0.4; 0.4 1.0]
 
-d = FSDABridge.call(h, "mahalFS", Y, MU, SIGMA)
+d = call(h, "mahalFS", Y, MU, SIGMA)
 
-FSDABridge.stop_engine(h)
+stop_engine(h)
 ```
 
 ## Reaching MATLAB directly
@@ -94,9 +94,9 @@ call("rng", 1234, nargout = 0)
 
 ## Examples
 
-Every function has a page of its own, listed in the sidebar. Each gives the
-input arguments, a worked example with its output, and links to the
-corresponding page of the FSDA documentation.
+Runnable scripts for each routine are in [`examples/`](examples/). The pages in
+[`docs/src/examples/`](docs/src/examples/) give each routine's input arguments, a worked
+example with its output, and a link to the corresponding page of the FSDA documentation.
 
 ## License
 
